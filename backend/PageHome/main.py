@@ -22,7 +22,13 @@ def read_recipes(request):
         }
         return (json.dumps(['']), 204, headers)
 
-    data = db.collection('users').document('dave').get().to_dict()
+    request_parsed = request.get_json()
+    logger.info(request_parsed)
+    uid = request_parsed['data']['uid']
+
+    data = db.collection('users').document(uid).get().to_dict()
+
+    data = eval(str(data).replace('\\\\u00bd', '1/2').replace('\\\\u00bc', '1/4'))
 
     # Need the key "data" in the return object
     response = json.dumps({'data': data})
@@ -45,8 +51,9 @@ def add_recipe(request):
     request_parsed = request.get_json()
     logger.info(request_parsed)
     url = request_parsed['data']['url']
+    uid = request_parsed['data']['uid']
 
-    data = db.collection('users').document('dave').get().to_dict()
+    data = db.collection('users').document(uid).get().to_dict()
 
     success = True
 
@@ -80,7 +87,7 @@ def add_recipe(request):
             "total_time": total_time,
             "url": scraper.canonical_url()
         }
-        doc_ref = db.collection('users').document('dave')
+        doc_ref = db.collection('users').document(uid)
         doc_ref.set(data)
     except:
         success = False
@@ -90,6 +97,32 @@ def add_recipe(request):
         'recipes': data,
         'success': success
     }})
+
+    headers = {'Access-Control-Allow-Origin': '*'}
+
+    return (response, 200, headers)
+
+
+def delete_recipe(request):
+    if request.method == 'OPTIONS':
+        headers = {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET',
+            'Access-Control-Allow-Headers': ['*', 'Content-Type', 'Authorization'],
+            'Access-Control-Max-Age': '3600'
+        }
+        return (json.dumps(['']), 204, headers)
+
+    request_parsed = request.get_json()
+    logger.info(request_parsed)
+    recipes = request_parsed['data']['recipes']
+    uid = request_parsed['data']['uid']
+
+    doc_ref = db.collection('users').document(uid)
+    doc_ref.set(recipes)
+
+    # Need the key "data" in the return object
+    response = json.dumps({'data': 'success'})
 
     headers = {'Access-Control-Allow-Origin': '*'}
 

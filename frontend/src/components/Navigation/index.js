@@ -3,11 +3,17 @@ import { Link } from 'react-router-dom';
 import styled from "styled-components";
 import MenuIcon from '@mui/icons-material/Menu';
 
+import ButtonSignOut from './buttonSignOut';
 import * as ROUTES from '../../constants/routes';
+import { AuthUserContext } from '../Session';
+
+import img from './pattern.jpeg';
 
 
 const Navbar = styled.div`
-  background-color: rgba(222, 185, 22, 1);
+  background-image: url(${img});
+  background-repeat: repeat;
+  background-size: 50px;
   padding: 0px 0px 20px;
   left: 0;
   width: 100%;
@@ -16,7 +22,9 @@ const Navbar = styled.div`
   height: 50px;
 `;
 const NavbarSmall = styled.div`
-  background-color: rgba(222, 185, 22, 1);
+  background-image: url(${img});
+  background-repeat: repeat;
+  background-size: 50px;
   padding: 0px 0px 20px;
   left: 0;
   width: 100%;
@@ -28,8 +36,10 @@ const StyledMenuIcon = styled.div`
   padding: 25px 0px 0px 20px;
 `;
 const StyledHomeLink = styled.div`
-  padding-top: 25px;
-  margin: -52px auto;
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 2px 20px 5px;
+  width: fit-content;
+  margin: -35px auto;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -43,70 +53,128 @@ const ListOrdered = styled.div`
   z-index: 2;
 `;
 const List = styled.ul`
+  background-color: rgba(0, 0, 0, 0.5);
   overflow-x: auto;
   display: flex;
   justify-content: left;
   align-items: left;
-  padding-bottom: 20px;
+  width: fit-content;
+  padding-bottom: 5px;
 `;
 const ListItemVertical = styled.div`
-  font-weight: 300;
-  background-color: rgba(0, 44, 25, 1);
+  background-image: url(${img});
+  background-repeat: repeat;
+  background-size: 50px;
+
   padding: 0px 15px 15px;
   width: 100%;
   z-index: 3;
 `;
+const StyledListItemVerticalShadow = styled.div`
+  background-color: rgba(0, 0, 0, 0.5);
+  width: fit-content;
+  padding: 2px 25px 5px;
+`;
 const ListItem = styled.li`
+  color: rgba(255, 255, 255, 0.9);
   display: inline-flex;
-    margin: 0px 40px 0px 0px;
-  font-weight: 300;
-  border-bottom: 2px solid rgba(62, 219, 104, 0);
+  text-align: center;
+  margin: 0px 40px 0px 0px;
+
   &:hover{
-    border-bottom: 1px solid rgba(0, 0, 0, 0.8);
-  }
-  @media (max-width: 1230px) {
-    margin: 0px 40px 0px 0px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.8);
   }
 `;
 const StyledLink = styled(Link)`
-  font-size: 20px;
-  color: rgb(0, 0, 0);
+  font-size: 17px;
+  color: rgba(255, 255, 255, 0.9);
   text-decoration: none;
   white-space: nowrap;
-  margin-top: 6px;
+  margin-top: 8px;
 `;
 const HomeLink = styled(Link)`
   font-size: 22px;
-  color: rgb(0, 0, 0);
+  color: rgba(255, 255, 255, 0.9);
   text-decoration: none;
   margin-top: 5px;
+  text-align: center;
 `;
 
 
 export default function Navigation() {
 
+  return (
+    <AuthUserContext.Consumer>
+      {authUser =>
+        authUser ? <NavigationAuth /> : <NavigationNonAuth />
+      }
+    </AuthUserContext.Consumer>
+  )
+}
+
+
+function removeElement() {
+    var elem = document.getElementById("chartjs-tooltip");
+    if (elem) {
+      return elem.parentNode.removeChild(elem);
+    }
+}
+
+
+function NavigationAuth() {
+
   const [menuDisplay, setMenuDisplay] = React.useState(false)
 
   return (
-    <div>
-      {window.innerWidth < 750 && <div>
-        <NavbarSmall>
-          <StyledMenuIcon><MenuIcon style={{color: '#fafafa'}} onClick={() => setMenuDisplay(!menuDisplay)} /></StyledMenuIcon>
-          <StyledHomeLink><HomeLink to={ROUTES.HOME}>Cooking with Ingles</HomeLink></StyledHomeLink>
-        </NavbarSmall>
-        {menuDisplay && <ListOrdered>
-          <ListItemVertical><StyledLink to={ROUTES.HOME} onClick={() => setMenuDisplay(false)}>Recipes</StyledLink></ListItemVertical>
-          <ListItemVertical><StyledLink to={ROUTES.GROCERY_LIST} onClick={() => setMenuDisplay(false)}>Grocery List</StyledLink></ListItemVertical>
-        </ListOrdered>}
-      </div>}
-      {window.innerWidth >= 750 && <Navbar>
-        <List>
-          <ListItem><HomeLink to={ROUTES.HOME}>Cooking with Ingles</HomeLink></ListItem>
-          <ListItem></ListItem>
-          <ListItem><StyledLink to={ROUTES.HOME}>Recipes</StyledLink></ListItem>
-          <ListItem><StyledLink to={ROUTES.GROCERY_LIST}>Grocery List</StyledLink></ListItem>
-        </List>
-      </Navbar>}
+    <div onMouseEnter={() => removeElement()}>
+    {window.innerWidth < 1050 && <div>
+      <NavbarSmall>
+        <StyledMenuIcon><MenuIcon style={{color: 'rgba(255, 255, 255, 1)'}} onClick={() => setMenuDisplay(!menuDisplay)} /></StyledMenuIcon>
+        <StyledHomeLink><HomeLink to={ROUTES.HOME}>Cooking with Ingles</HomeLink></StyledHomeLink>
+      </NavbarSmall>
+      {menuDisplay && <ListOrdered>
+        <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.HOME} onClick={() => setMenuDisplay(false)}>Home</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
+        <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.ACCOUNT} onClick={() => setMenuDisplay(false)}>Account</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
+        <ListItemVertical><StyledListItemVerticalShadow><ButtonSignOut onClick={() => setMenuDisplay(false)}/></StyledListItemVerticalShadow></ListItemVertical>
+      </ListOrdered>}
+    </div>}
+    {window.innerWidth >= 1050 && <Navbar>
+      <List>
+        <ListItem><HomeLink to={ROUTES.HOME}>Cooking with Ingles</HomeLink></ListItem>
+        <ListItem></ListItem>
+        <ListItem><StyledLink to={ROUTES.ACCOUNT}>Account</StyledLink></ListItem>
+        <ListItem><ButtonSignOut /></ListItem>
+      </List>
+    </Navbar>}
+    </div>
+  )
+}
+
+function NavigationNonAuth() {
+
+  const [menuDisplay, setMenuDisplay] = React.useState(false)
+
+  return (
+    <div onMouseEnter={() => removeElement()}>
+    {window.innerWidth < 1050 && <div>
+      <NavbarSmall>
+        <StyledMenuIcon><MenuIcon onClick={() => setMenuDisplay(!menuDisplay)} /></StyledMenuIcon>
+        <StyledHomeLink><HomeLink to={ROUTES.HOME}>Cooking with Ingles</HomeLink></StyledHomeLink>
+      </NavbarSmall>
+      {menuDisplay && <ListOrdered>
+        <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.HOME} onClick={() => setMenuDisplay(false)}>Home</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
+        <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.LOG_IN} onClick={() => setMenuDisplay(false)}>Log In</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
+        <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.SIGN_UP} onClick={() => setMenuDisplay(false)}>Sign Up</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
+      </ListOrdered>}
+    </div>}
+    {window.innerWidth >= 1050 && <Navbar>
+      <List>
+        <ListItem><HomeLink to={ROUTES.HOME}>Cooking with Ingles</HomeLink></ListItem>
+        <ListItem></ListItem>
+        <ListItem><StyledLink to={ROUTES.LOG_IN}>Log In</StyledLink></ListItem>
+        <ListItem><StyledLink to={ROUTES.SIGN_UP}>Sign Up</StyledLink></ListItem>
+      </List>
+    </Navbar>}
     </div>
   )
 }
