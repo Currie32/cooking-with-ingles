@@ -4,10 +4,8 @@ import {
     BrowserRouter as Router,
     Switch,
     Route,
-    Redirect,
 
 } from 'react-router-dom';
-import styled from 'styled-components';
 
 import Navigation from './components/Navigation';
 import Footer from './components/Footer';
@@ -15,8 +13,8 @@ import Footer from './components/Footer';
 import PageAccount from './components/PageAccount';
 import PageHome from './components/PageHome';
 import PageLogIn from './components/PageLogIn';
+import PageSearch from './components/PageSearch';
 import PageSignUp from './components/PageSignUp';
-import PageGroceryList from './components/PageGroceryList';
 import PageTermsOfUse from './components/Footer/termsOfUse';
 
 
@@ -46,6 +44,7 @@ function App() {
         <Switch>
           <Route exact path={ROUTES.ACCOUNT} component={PageAccount}/>
           <Route exact path={ROUTES.HOME} render={ () => <PageHome uid={uid} />}/>
+          <Route exact path={ROUTES.SEARCH} component={PageSearch} />
           <Route exact path={ROUTES.LOG_IN} component={PageLogIn} />
           <Route exact path={ROUTES.SIGN_UP} component={PageSignUp} />
           <Route exact path={ROUTES.TERMS_OF_USE} component={PageTermsOfUse} />

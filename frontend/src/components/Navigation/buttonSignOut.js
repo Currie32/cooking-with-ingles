@@ -4,13 +4,13 @@ import { withFirebase } from '../Firebase';
 
 
 const StyledDiv = styled.div`
-  font-size: 17px;
+  font-size: 18px;
   font-family: 'Lato';
   text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
   width: 70px;
-  margin-top: 7px;
+  margin-top: 6px;
   color: rgba(255, 255, 255, 0.9);
 `;
 

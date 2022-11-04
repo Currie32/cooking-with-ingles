@@ -7,7 +7,7 @@ import ButtonSignOut from './buttonSignOut';
 import * as ROUTES from '../../constants/routes';
 import { AuthUserContext } from '../Session';
 
-import img from './pattern.jpeg';
+import img from './pattern2.jpeg';
 
 
 const Navbar = styled.div`
@@ -36,7 +36,7 @@ const StyledMenuIcon = styled.div`
   padding: 25px 0px 0px 20px;
 `;
 const StyledHomeLink = styled.div`
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.6);
   padding: 2px 20px 5px;
   width: fit-content;
   margin: -35px auto;
@@ -53,7 +53,7 @@ const ListOrdered = styled.div`
   z-index: 2;
 `;
 const List = styled.ul`
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.6);
   overflow-x: auto;
   display: flex;
   justify-content: left;
@@ -71,7 +71,7 @@ const ListItemVertical = styled.div`
   z-index: 3;
 `;
 const StyledListItemVerticalShadow = styled.div`
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.6);
   width: fit-content;
   padding: 2px 25px 5px;
 `;
@@ -86,11 +86,11 @@ const ListItem = styled.li`
   }
 `;
 const StyledLink = styled(Link)`
-  font-size: 17px;
+  font-size: 18px;
   color: rgba(255, 255, 255, 0.9);
   text-decoration: none;
   white-space: nowrap;
-  margin-top: 8px;
+  margin-top: 6px;
 `;
 const HomeLink = styled(Link)`
   font-size: 22px;
@@ -134,6 +134,7 @@ function NavigationAuth() {
       </NavbarSmall>
       {menuDisplay && <ListOrdered>
         <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.HOME} onClick={() => setMenuDisplay(false)}>Home</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
+        <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.SEARCH} onClick={() => setMenuDisplay(false)}>Search</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
         <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.ACCOUNT} onClick={() => setMenuDisplay(false)}>Account</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
         <ListItemVertical><StyledListItemVerticalShadow><ButtonSignOut onClick={() => setMenuDisplay(false)}/></StyledListItemVerticalShadow></ListItemVertical>
       </ListOrdered>}
@@ -142,6 +143,7 @@ function NavigationAuth() {
       <List>
         <ListItem><HomeLink to={ROUTES.HOME}>Cooking with Ingles</HomeLink></ListItem>
         <ListItem></ListItem>
+        <ListItem><StyledLink to={ROUTES.SEARCH}>Search</StyledLink></ListItem>
         <ListItem><StyledLink to={ROUTES.ACCOUNT}>Account</StyledLink></ListItem>
         <ListItem><ButtonSignOut /></ListItem>
       </List>
@@ -163,6 +165,7 @@ function NavigationNonAuth() {
       </NavbarSmall>
       {menuDisplay && <ListOrdered>
         <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.HOME} onClick={() => setMenuDisplay(false)}>Home</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
+        <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.SEARCH} onClick={() => setMenuDisplay(false)}>Search</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
         <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.LOG_IN} onClick={() => setMenuDisplay(false)}>Log In</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
         <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.SIGN_UP} onClick={() => setMenuDisplay(false)}>Sign Up</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
       </ListOrdered>}
@@ -171,6 +174,7 @@ function NavigationNonAuth() {
       <List>
         <ListItem><HomeLink to={ROUTES.HOME}>Cooking with Ingles</HomeLink></ListItem>
         <ListItem></ListItem>
+        <ListItem><StyledLink to={ROUTES.SEARCH}>Search</StyledLink></ListItem>
         <ListItem><StyledLink to={ROUTES.LOG_IN}>Log In</StyledLink></ListItem>
         <ListItem><StyledLink to={ROUTES.SIGN_UP}>Sign Up</StyledLink></ListItem>
       </List>

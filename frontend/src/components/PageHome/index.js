@@ -1,16 +1,10 @@
 import React from 'react';
 import firebase from 'firebase';
-import {
-    BrowserRouter as Router,
-    Routes,
-    Route,
-    Redirect,
-    Link
-} from 'react-router-dom';
+import {Link} from 'react-router-dom';
 import styled from 'styled-components';
 import { styled as styledMUI } from '@mui/material/styles';
 
-import {makeStyles, withStyles} from '@material-ui/core/styles';
+import {withStyles} from '@material-ui/core/styles';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -156,6 +150,11 @@ const StyledImageImg = styled.img`
 const StyledDialog = styled.div`
   width: 500px;
   padding: 20px 30px;
+  @media (max-width: 600px) {width: 450px}
+  @media (max-width: 550px) {width: 400px}
+  @media (max-width: 500px) {width: 350px}
+  @media (max-width: 450px) {width: 300px}
+  @media (max-width: 400px) {width: 250px}
 `
 const StyledAddRecipeTextField = styled.div`
   display: flex;
@@ -318,8 +317,6 @@ export default function PageHome({uid}) {
     }
   }, [deleteRecipe])
 
-  console.log(uid)
-
   return (
     <StyledPage className="App">
         <Grid container spacing={3}>
@@ -359,16 +356,16 @@ export default function PageHome({uid}) {
 
           <Grid item xs={12}>
             <CssTextField
-              fullWidth variant="outlined" size='small' placeholder={'Filter recipes (e.g. Thai, noodles, coconut milk, etc.)'} onChange={getSearchText} value={searchText}
+              fullWidth variant="outlined" size='small' placeholder={'Filter recipes (e.g. Thai, noodles, coconut milk, etc.)'} onInput={getSearchText} value={searchText}
             />
             {loadingRecipes && <StyledRecipeLoading>
               <CircularProgress/>
             </StyledRecipeLoading>}
             {Object.keys(recipes).length > 0 && <StyledResultsSection>
               {Object.values(recipes).sort(sortByTitle).filter(
-                recipe => searchText.split(',').every(
-                  i => recipe.title?.toLowerCase().concat(', ', String(recipe.ingredients)?.toLowerCase()).includes(i)
-                )
+                recipe => (searchText.split(',').every(
+                  i => (recipe.title.toLowerCase().concat(', ', String(recipe.ingredients).toLowerCase())).includes(i)
+                ))
               ).map((recipe, index_recipe) => (
 
                 <Accordion key={index_recipe}>
