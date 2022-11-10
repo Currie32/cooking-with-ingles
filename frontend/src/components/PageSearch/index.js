@@ -54,11 +54,26 @@ const StyledRecipeSection = styled.div`
     /* Opera doesn't support this in the shorthand */
     background-attachment: local, local, scroll, scroll;
 `;
-
+const StyledCoIngredients = styled.div`
+    margin: 10px auto 30px;
+    font-size: 16px;
+    font-style: italic;
+    color: rgb(70, 70, 70);
+`;
+const StyledCoIngredientsHeader = styled.p`
+    font-size: 18px;
+    font-style: normal;
+    display: flex;
+    color: rgb(0, 0, 0);
+`;
+const StyledCoIngredientsSearchText = styled.div`
+    color: rgb(58, 60, 123);
+    font-weight: 600;
+    margin: -1px 0px 0px 10px;
+    font-size: 18px;
+`;
 const StyledRecipe = styled.div`
   margin: 0px auto 35px;
-//   border: 0.5px solid rgb(200, 200, 200);
-//   border-radius: 10px;
 `;
 const StyledRecipeName = styled.div`
   font-size: 18px;
@@ -90,10 +105,12 @@ const StyledIngredientsAndCategoriesTitle = styled.div`
 export default function PageSearch() {
 
   const [loadingSearch, setLoadingSearch] = React.useState(false)
-  const [resultsSearch, setResultsSearch] = React.useState(false)
+  const [recipes, setRecipes] = React.useState(false)
+  const [coIngredients, setCoIngredients] = React.useState(false)
   const [searchText, setSearchText] = React.useState('')
   const getSearchText = (e) => {
-    setResultsSearch(false)
+    setRecipes(false)
+    setCoIngredients(false)
     if (!e) {setSearchText(''); setLoadingSearch(false)}
     else if (e.target.value === '') {setSearchText(''); setLoadingSearch(false)}
     else {setLoadingSearch(true); setSearchText(e.target.value)}
@@ -122,7 +139,8 @@ export default function PageSearch() {
 
   React.useEffect(() => {
     if (searchText && searchText?.toLowerCase() === responseSearch?.query?.toLowerCase()) {
-      setResultsSearch(responseSearch.recipes)
+      setRecipes(responseSearch.recipes)
+      setCoIngredients(responseSearch.co_ingredients)
       setLoadingSearch(false)
     }
   }, [responseSearch?.query])
@@ -143,8 +161,16 @@ export default function PageSearch() {
                     <CircularProgress/>
                 </Grid>}
 
-                {resultsSearch?.length > 0 && <StyledRecipeSection>
-                    {resultsSearch?.map((recipe, index) => (
+                {coIngredients && <StyledCoIngredients>
+                    <StyledCoIngredientsHeader>
+                        These ingredients are commonly used with: <StyledCoIngredientsSearchText>{searchText}</StyledCoIngredientsSearchText>
+                    </StyledCoIngredientsHeader>
+                    {coIngredients.join(', ')}
+                </StyledCoIngredients>}
+
+                {recipes?.length > 0 && <StyledRecipeSection>
+                    
+                    {recipes?.map((recipe, index) => (
                         <StyledRecipe key={index}>
                             <StyledRecipeName>{recipe.title}</StyledRecipeName>
                                 <StyledBookAndPage>

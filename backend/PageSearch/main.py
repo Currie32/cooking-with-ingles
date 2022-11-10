@@ -5,6 +5,7 @@ import re
 import inflect
 from firebase_admin import credentials, firestore, initialize_app
 from jellyfish import jaro_similarity
+import networkx as nx
 import numpy as np
 
 p = inflect.engine()
@@ -54,15 +55,13 @@ def get_recipes(request):
         with open('./cookbooks.json', 'rb') as fh:
             cookbooks = json.load(fh)
 
-        for recipe in cookbooks:
-            recipe_ingredients = recipe['ingredients']
-            recipe_ingredients_standardised = [standardise_ingredient(i) for i in recipe_ingredients]
-            recipe['ingredients_standardised'] = recipe_ingredients_standardised
-
         recipes = _get_recipes_by_keywords(ingredients, cookbooks)
+        recipe_graph = nx.read_gpickle('./recipe_graph.pkl')
+        co_ingredients = what_goes_with(ingredients, recipe_graph)
 
     response = {
         'recipes': recipes,
+        'co_ingredients': co_ingredients,
         'query': ingredients_raw
     }
 
@@ -78,7 +77,7 @@ def _get_recipes_by_keywords(text, recipes):
     
     text = text.split(',')
     
-    recipes_found = {}
+    recipes_found_indices = {}
     
     for index, recipe in enumerate(recipes):
         
@@ -95,11 +94,15 @@ def _get_recipes_by_keywords(text, recipes):
                 points += 1
 
         if points >= max(1, len(text) - 1):
-            recipes_found[index] = points
+            recipes_found_indices[index] = points
             
-    recipes_found = dict(sorted(recipes_found.items(), key=lambda item: item[1], reverse=True))
-                
-    return list(np.array(recipes)[list(recipes_found)])
+    recipes_found_indices = dict(sorted(recipes_found_indices.items(), key=lambda item: item[1], reverse=True))
+    recipes_best_match = np.array(recipes)[list(recipes_found_indices)][:50]
+    
+    return [
+        {k:v for k, v in recipe.items() if k != 'ingredients_standardised'}
+        for recipe in recipes_best_match
+    ]
 
 
 def matching_ingredients(ingredient_input, ingredient_recipe):
@@ -130,4 +133,43 @@ def standardise_ingredient(ingredient):
     ingredient = re.sub(r"([a-z]+) bell pepper", 'bell pepper', ingredient)
     
     return ingredient
+
+
+def what_goes_with(ingredients, recipe_graph, n=15):
+    
+    co_recipe_counts = {}
+    co_ingredients_all = []
+
+    for ingredient in ingredients.split(', '):
+        
+        if recipe_graph.has_node(ingredient):
+        
+            co_recipe_counts[ingredient] = {}
+
+            for recipe in recipe_graph.neighbors(ingredient):
+                for co_ingredient in recipe_graph.neighbors(recipe):
+
+                    if co_ingredient in ingredients:
+                        continue
+
+                    elif co_ingredient not in co_recipe_counts[ingredient]:
+                        co_recipe_counts[ingredient][co_ingredient] = 1
+                        co_ingredients_all.append(co_ingredient)
+                    else:
+                        co_recipe_counts[ingredient][co_ingredient] += 1
+                    
+    co_ingredients_all = sorted(set(co_ingredients_all))
+    
+    co_ingredients_weights = {}
+    for co_ingredient in co_ingredients_all:
+        value = 1
+        for counts in co_recipe_counts.values():
+            if co_ingredient in list(counts):
+                value = value * counts[co_ingredient]
+        co_ingredients_weights[co_ingredient] = value
+                    
+    co_ingredients_weights = dict(sorted(co_ingredients_weights.items(), key=lambda item: item[1], reverse=True))
+    top_co_ingredients = list(co_ingredients_weights)[:n]
+    
+    return top_co_ingredients
 

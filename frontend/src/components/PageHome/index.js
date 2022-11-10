@@ -193,9 +193,11 @@ const StyledLink = styled(Link)`
 const StyledResultsSection = styled.div`
   overflow-x: hidden;
   overflow-y: scroll;
-  height: 360px;
+  height: 450px;
   margin: 25px auto;
-  @media (max-width: 499px) {height: 335px}
+  @media (max-width: 499px) {height: 335px};
+  border: 1px solid rgb(200, 200, 200);
+  border-radius: 5px;
 `;
 
 

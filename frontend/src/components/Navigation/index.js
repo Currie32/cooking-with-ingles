@@ -36,7 +36,7 @@ const StyledMenuIcon = styled.div`
   padding: 25px 0px 0px 20px;
 `;
 const StyledHomeLink = styled.div`
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(0, 0, 0, 0.8);
   padding: 2px 20px 5px;
   width: fit-content;
   margin: -35px auto;
@@ -53,7 +53,7 @@ const ListOrdered = styled.div`
   z-index: 2;
 `;
 const List = styled.ul`
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(0, 0, 0, 0.8);
   overflow-x: auto;
   display: flex;
   justify-content: left;
@@ -71,7 +71,7 @@ const ListItemVertical = styled.div`
   z-index: 3;
 `;
 const StyledListItemVerticalShadow = styled.div`
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(0, 0, 0, 0.8);
   width: fit-content;
   padding: 2px 25px 5px;
 `;
