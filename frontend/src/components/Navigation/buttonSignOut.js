@@ -12,6 +12,9 @@ const StyledDiv = styled.div`
   width: 70px;
   margin-top: 6px;
   color: rgba(255, 255, 255, 0.9);
+  @media (max-width: 1050px) {
+    margin-top: 2px;
+  }
 `;
 
 

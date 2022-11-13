@@ -48,9 +48,9 @@ def get_recipes(request):
     logger.info(request_parsed)
     ingredients_raw = request_parsed['data']['ingredients']
 
-    ingredients = re.sub(' +', ' ', ', '.join(ingredients_raw.split(',')))
+    if ingredients_raw:
 
-    if ingredients:
+        ingredients = [standardise_ingredient(i) for i in ingredients_raw.split(',')]
 
         with open('./cookbooks.json', 'rb') as fh:
             cookbooks = json.load(fh)
@@ -74,9 +74,7 @@ def get_recipes(request):
 
 
 def _get_recipes_by_keywords(text, recipes):
-    
-    text = text.split(',')
-    
+        
     recipes_found_indices = {}
     
     for index, recipe in enumerate(recipes):
@@ -84,13 +82,20 @@ def _get_recipes_by_keywords(text, recipes):
         points = 0
         
         for word in text:
+            
             if word in recipe['title'].lower():
                 points += 1
                 
-            elif any([matching_ingredients(word, c) for c in recipe['categories']]):
+            if any([matching_ingredients(word, c) for c in recipe['categories']]):
                 points += 1
                 
-            elif any([matching_ingredients(word, c) for c in recipe['ingredients_standardised']]):
+            if any([matching_ingredients(word, c) for c in recipe['ingredients_standardised']]):
+                points += 1
+
+            if matching_ingredients(word, recipe['book']):
+                points += 1
+                
+            if matching_ingredients(word, recipe['author'], 0.8):
                 points += 1
 
         if points >= max(1, len(text) - 1):
@@ -100,24 +105,24 @@ def _get_recipes_by_keywords(text, recipes):
     recipes_best_match = np.array(recipes)[list(recipes_found_indices)][:50]
     
     return [
-        {k:v for k, v in recipe.items() if k != 'ingredients_standardised'}
+        {k:v for k, v in recipe.items() if k not in ['ingredients_standardised', 'categories']}
         for recipe in recipes_best_match
     ]
 
 
-def matching_ingredients(ingredient_input, ingredient_recipe):
+def matching_ingredients(ingredient_input, ingredient_recipe, threshold=0.9):
 
     ingredient_input = ingredient_input.lower()
     ingredient_recipe = ingredient_recipe.lower()
     
-    if jaro_similarity(ingredient_input, ingredient_recipe) > 0.9:
+    if jaro_similarity(ingredient_input, ingredient_recipe) > threshold:
         return True
 
 
 def standardise_ingredient(ingredient):
     
-    ingredient = ingredient.lower()
-    
+    ingredient = ingredient.lower().strip()
+
     ingredient = ingredient_mapping.get(ingredient, ingredient)
     
     ingredient = re.sub(r'(canned )|(ground )|(sweet )', '', ingredient)
@@ -140,7 +145,7 @@ def what_goes_with(ingredients, recipe_graph, n=15):
     co_recipe_counts = {}
     co_ingredients_all = []
 
-    for ingredient in ingredients.split(', '):
+    for ingredient in ingredients:
         
         if recipe_graph.has_node(ingredient):
         
@@ -172,4 +177,3 @@ def what_goes_with(ingredients, recipe_graph, n=15):
     top_co_ingredients = list(co_ingredients_weights)[:n]
     
     return top_co_ingredients
-

@@ -7,7 +7,7 @@ import ButtonSignOut from './buttonSignOut';
 import * as ROUTES from '../../constants/routes';
 import { AuthUserContext } from '../Session';
 
-import img from './pattern2.jpeg';
+import img from './pattern.jpeg';
 
 
 const Navbar = styled.div`
@@ -33,7 +33,10 @@ const NavbarSmall = styled.div`
   height: 50px;
 `;
 const StyledMenuIcon = styled.div`
-  padding: 25px 0px 0px 20px;
+  background-color: rgba(0, 0, 0, 0.8);
+  margin: 20px 0px 0px 20px;
+  padding: 4px 5px 0px;
+  width: fit-content;
 `;
 const StyledHomeLink = styled.div`
   background-color: rgba(0, 0, 0, 0.8);
@@ -43,12 +46,15 @@ const StyledHomeLink = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
+  @media (max-width: 1050px) {
+    margin: -35px auto;
+    padding: 0px 20px 6px;
+  };
 `;
 const ListOrdered = styled.div`
   padding-top: 70px;
   left: 0;
   position: fixed;
-  height: 150px;
   width: 100%;
   z-index: 2;
 `;
@@ -66,13 +72,13 @@ const ListItemVertical = styled.div`
   background-repeat: repeat;
   background-size: 50px;
 
-  padding: 0px 15px 15px;
+  padding: 0px 15px 0px;
   width: 100%;
   z-index: 3;
 `;
 const StyledListItemVerticalShadow = styled.div`
   background-color: rgba(0, 0, 0, 0.8);
-  width: fit-content;
+  width: 70px;
   padding: 2px 25px 5px;
 `;
 const ListItem = styled.li`
@@ -136,7 +142,7 @@ function NavigationAuth() {
         <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.HOME} onClick={() => setMenuDisplay(false)}>Home</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
         <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.SEARCH} onClick={() => setMenuDisplay(false)}>Search</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
         <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.ACCOUNT} onClick={() => setMenuDisplay(false)}>Account</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
-        <ListItemVertical><StyledListItemVerticalShadow><ButtonSignOut onClick={() => setMenuDisplay(false)}/></StyledListItemVerticalShadow></ListItemVertical>
+        <ListItemVertical style={{paddingBottom: '20px'}}><StyledListItemVerticalShadow><ButtonSignOut onClick={() => setMenuDisplay(false)}/></StyledListItemVerticalShadow></ListItemVertical>
       </ListOrdered>}
     </div>}
     {window.innerWidth >= 1050 && <Navbar>
@@ -160,7 +166,7 @@ function NavigationNonAuth() {
     <div onMouseEnter={() => removeElement()}>
     {window.innerWidth < 1050 && <div>
       <NavbarSmall>
-        <StyledMenuIcon><MenuIcon onClick={() => setMenuDisplay(!menuDisplay)} /></StyledMenuIcon>
+        <StyledMenuIcon><MenuIcon style={{color: 'rgba(255, 255, 255, 1)'}} onClick={() => setMenuDisplay(!menuDisplay)} /></StyledMenuIcon>
         <StyledHomeLink><HomeLink to={ROUTES.HOME}>Cooking with Ingles</HomeLink></StyledHomeLink>
       </NavbarSmall>
       {menuDisplay && <ListOrdered>

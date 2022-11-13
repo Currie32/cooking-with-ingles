@@ -11,11 +11,11 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 
 
 const StyledPage = styled.div`
-  min-height: 580px;
+  min-height: 570px;
   margin: 0px 20px;
 `;
 const StyledContent = styled.div`
-    margin: 60px auto 0px;
+    margin: 80px auto 0px;
     max-width: 700px;
 `;
 const CssTextField = withStyles({
@@ -38,7 +38,7 @@ const CssTextField = withStyles({
 const StyledRecipeSection = styled.div`
     overflow-x: hidden;
     overflow-y: scroll;
-    height: 510px;
+    height: 470px;
     @media (max-width: 1199px) {height: 470px};
     @media (max-width: 959px) {height: 375px};
     @media (max-width: 599px) {height: 350px}
@@ -55,13 +55,13 @@ const StyledRecipeSection = styled.div`
     background-attachment: local, local, scroll, scroll;
 `;
 const StyledCoIngredients = styled.div`
-    margin: 10px auto 30px;
+    margin: -20px auto 35px;
     font-size: 16px;
     font-style: italic;
     color: rgb(70, 70, 70);
 `;
 const StyledCoIngredientsHeader = styled.p`
-    font-size: 18px;
+    font-size: 17px;
     font-style: normal;
     display: flex;
     color: rgb(0, 0, 0);
@@ -70,7 +70,7 @@ const StyledCoIngredientsSearchText = styled.div`
     color: rgb(58, 60, 123);
     font-weight: 600;
     margin: -1px 0px 0px 10px;
-    font-size: 18px;
+    font-size: 17px;
 `;
 const StyledRecipe = styled.div`
   margin: 0px auto 35px;
@@ -84,6 +84,7 @@ const StyledBookAndPage = styled.div`
     margin: 7px 0px 3px;
 `;
 const StyledBook = styled.div`
+    display: flex;
     font-weight: 600;
     margin-right: 20px;
     color: rgb(59, 61, 123);
@@ -99,6 +100,12 @@ const StyledIngredientsAndCategoriesTitle = styled.div`
     font-weight: 500;
     margin-right: 20px;
     color: rgb(0, 0, 0);
+`;
+const StyledNoRecipes = styled.div`
+    margin-top: 60px;
+    text-align: center;
+    font-style: italic;
+    font-size: 17px;
 `;
 
 
@@ -123,14 +130,11 @@ export default function PageSearch() {
   const [responseSearch, setResponseSearch] = React.useState({recipes: [], query: ''})
   React.useEffect(() => {
     if (searchText === searchTextDelayed && searchText !== '') {
-        console.log('123')
       async function getData() {
-        // firebase.analytics().logEvent("searching")
         const getRecipes = firebase.functions().httpsCallable('get_recipes');
         const response = await getRecipes({
           ingredients: searchText
         }).then(response => response.data)
-        console.log(response)
         setResponseSearch(response)
       }
       getData()
@@ -145,8 +149,6 @@ export default function PageSearch() {
     }
   }, [responseSearch?.query])
 
-  console.log(searchText, searchTextDelayed)
-
   return (
     <StyledPage>
         <Grid container spacing={3}>
@@ -154,14 +156,14 @@ export default function PageSearch() {
           <Grid item xs={12}>
             <StyledContent>
                 <CssTextField
-                fullWidth variant="outlined" size='small' placeholder={'Search for recipes (e.g. pasta, tomatoes, cheese, etc.)'} onInput={getSearchText} value={searchText}
+                fullWidth variant="outlined" size='small' placeholder={'Search for recipes in cookbooks (e.g. pasta, tomatoes, cheese, etc.)'} onInput={getSearchText} value={searchText}
                 />
 
                 {loadingSearch && <Grid item xs={12} style={{justifyContent: 'center', display: 'flex', marginTop: '100px'}}>
                     <CircularProgress/>
                 </Grid>}
 
-                {coIngredients && <StyledCoIngredients>
+                {coIngredients?.length > 0 && <StyledCoIngredients>
                     <StyledCoIngredientsHeader>
                         These ingredients are commonly used with: <StyledCoIngredientsSearchText>{searchText}</StyledCoIngredientsSearchText>
                     </StyledCoIngredientsHeader>
@@ -174,21 +176,20 @@ export default function PageSearch() {
                         <StyledRecipe key={index}>
                             <StyledRecipeName>{recipe.title}</StyledRecipeName>
                                 <StyledBookAndPage>
-                                    <StyledBook>{recipe.book}</StyledBook>
+                                    <StyledBook>{recipe.book} <div style={{color: 'black', margin: '0px 5px'}}>by</div> {recipe.author}</StyledBook>
                                     <StyledPageNumber>Page: {recipe.page}</StyledPageNumber>
                                 </StyledBookAndPage>
                                 <StyledIngredientsAndCategories>
                                     <StyledIngredientsAndCategoriesTitle>Ingredients:</StyledIngredientsAndCategoriesTitle>
                                     {recipe.ingredients.join(', ')}
                                 </StyledIngredientsAndCategories>
-                                <StyledIngredientsAndCategories>
-                                    <StyledIngredientsAndCategoriesTitle>Categories:</StyledIngredientsAndCategoriesTitle>
-                                    {recipe.categories.join(', ')}
-                                </StyledIngredientsAndCategories>
                         </StyledRecipe>
-                        ))}
-                        </StyledRecipeSection>
-                }
+                    ))}
+                </StyledRecipeSection>}
+                {recipes?.length == 0 && <StyledNoRecipes>
+                    No recipes were found with these ingredients.
+                </StyledNoRecipes>}
+
             </StyledContent>
             
             
