@@ -2,25 +2,20 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#000000" />
     <meta property="og:title" content="Cooking with Ingles" />
-    <meta
-      name="description"
-      content="Find an activity near you!"
-    />
-    <link rel="shortcut icon" type="image/png/ico" href="./logo.png" />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <meta property="og:description" content="Find recipes faster!" />
+    <meta property="og:url" content="https://www.cookingwithingles.com" />
+    <meta name="description" content="Find recipes faster!"/>
+
     <link rel="manifest" href="/site.webmanifest">
     <!--
       manifest.json provides metadata used when your web app is installed on a
       user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
     -->
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <link rel="shortcut icon" type="image/png/ico" href="./favicon.ico" />
     <!--
       Notice the use of %PUBLIC_URL% in the tags above.
       It will be replaced with the URL of the `public` folder during the build.
@@ -62,7 +57,7 @@
 
     <script>
 		  // Initialize Firebase
-		  firebase.initializeApp(require('..src/Firebase/serviceAccountKey.json'));
+		  firebase.initializeApp(require('../src/Firebase/serviceAccountKey.json'));
 		  firebase.analytics();
 		</script>
   </body>
