@@ -42,14 +42,16 @@ const StyledButtonCSS = withStyles((theme) => ({
   fontSize: '18px',
   ['@media (max-width:600px)']: {fontSize: '16px'},
   root: {
-    backgroundColor: 'rgba(222, 185, 22, 1)',
-    color: 'rgba(0, 0, 0, 1)',
+    borderColor: 'rgba(79, 118, 226, 0.5)',
+    backgroundColor: 'rgba(79, 118, 226, 0.1)',
+    color: 'rgba(79, 118, 226, 1)',
     '&:hover': {
-      backgroundColor: 'rgba(222, 185, 22, 0.8)',
+      backgroundColor: 'rgba(79, 118, 226, 0.2)',
+      borderColor: 'rgba(79, 118, 226, 0.6)',
     },
     '&:disabled': {
-      backgroundColor: 'rgba(222, 185, 22, 0.3)',
-      color: 'rgba(0, 0, 0, 0.3)'
+      backgroundColor: 'rgba(151, 172, 232, 0.5)',
+      borderColor: 'rgba(151, 172, 232, 0.8)',
     }
   },
 }))(Button);
