@@ -120,7 +120,11 @@ export default function PageSearch() {
     setCoIngredients(false)
     if (!e) {setSearchText(''); setLoadingSearch(false)}
     else if (e.target.value === '') {setSearchText(''); setLoadingSearch(false)}
-    else {setLoadingSearch(true); setSearchText(e.target.value)}
+    else {
+        setLoadingSearch(true);
+        setSearchText(e.target.value);
+        window.localStorage.setItem('searchTextSearch', JSON.stringify(e.target.value))
+    }
   }
   const [searchTextDelayed, setSearchTextDelayed] = React.useState('')
   React.useEffect(() => {
@@ -146,8 +150,19 @@ export default function PageSearch() {
       setRecipes(responseSearch.recipes)
       setCoIngredients(responseSearch.co_ingredients)
       setLoadingSearch(false)
+      window.localStorage.setItem('recipesSearch', JSON.stringify(responseSearch.recipes))
+      window.localStorage.setItem('coIngredientsSearch', JSON.stringify(responseSearch.co_ingredients))
     }
   }, [responseSearch?.query])
+
+  React.useEffect(() => {
+    const storedSearchText = window.localStorage.getItem('searchTextSearch');
+    const storedRecipes = window.localStorage.getItem('recipesSearch');
+    const storedCoIngredients = window.localStorage.getItem('coIngredientsSearch');
+    if ( storedSearchText !== null ) setSearchText(JSON.parse(storedSearchText));
+    if ( storedRecipes !== null ) setRecipes(JSON.parse(storedRecipes));
+    if ( storedCoIngredients !== null ) setCoIngredients(JSON.parse(storedCoIngredients));
+  }, []);
 
   return (
     <StyledPage>
