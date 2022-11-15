@@ -225,6 +225,7 @@ export default function PageHome({uid}) {
         let response = await readRecipes({uid: uid}).then(response => response.data)
         setLoadingRecipes(false)
         setRecipes(response)
+        window.localStorage.setItem('recipesHome', JSON.stringify(response))
       }
       fetchData()
     }
@@ -234,7 +235,10 @@ export default function PageHome({uid}) {
   const getSearchText = (text) => {
     if (!text) {setSearchText('')}
     else if (text.target.value === '') {setSearchText('')}
-    else {setSearchText(text.target.value)}
+    else {
+      setSearchText(text.target.value);
+      window.localStorage.setItem('searchTextHome', JSON.stringify(text.target.value))
+    }
   }
 
   const [createAccount, setCreateAccount] = React.useState(false)
@@ -316,6 +320,16 @@ export default function PageHome({uid}) {
       fetchData()
     }
   }, [deleteRecipe])
+
+  React.useEffect(() => {
+    const storedRecipes = window.localStorage.getItem('recipesHome');
+    const storedSearchText = window.localStorage.getItem('searchTextHome');
+    if ( storedRecipes !== null ) {
+      setLoadingRecipes(false)
+      setRecipes(JSON.parse(storedRecipes));
+    };
+    if ( storedSearchText !== null ) {setSearchText(JSON.parse(storedSearchText))};
+  }, []);
 
   return (
     <StyledPage className="App">
