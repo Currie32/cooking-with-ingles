@@ -43,22 +43,26 @@
       To begin the development, run `npm start` or `yarn start`.
       To create a production bundle, use `npm run build` or `yarn build`.
     -->
-    <!-- The core Firebase JS SDK is always required and must be listed first -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 
 
-    <!-- TODO: Add SDKs for Firebase products that you want to use
-         https://firebase.google.com/docs/web/setup#available-libraries -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script>
+    <script type="module">
+      // Import the functions you need from the SDKs you need
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.14.0/firebase-app.js";
+      import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.14.0/firebase-analytics.js";
 
+      const firebaseConfig = {
+        apiKey: "AIzaSyBhgTH-fI2GGlVC3W0N4uXLFMcCsYf-fTA",
+        authDomain: "cooking-with-ingles.firebaseapp.com",
+        projectId: "cooking-with-ingles",
+        storageBucket: "cooking-with-ingles.appspot.com",
+        messagingSenderId: "653853056354",
+        appId: "1:653853056354:web:f4304d2f3f4508a71ca03b",
+        measurementId: "G-690W0X1P56"
+      };
 
-    <!-- Initialize Firebase -->
-    <script src="/__/firebase/init.js"></script>
-
-    <script>
-		  // Initialize Firebase
-		  firebase.initializeApp(require('../src/Firebase/serviceAccountKey.json'));
-		  firebase.analytics();
-		</script>
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const analytics = getAnalytics(app);
+    </script>
   </body>
 </html>
