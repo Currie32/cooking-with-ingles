@@ -3,6 +3,9 @@ import firebase from 'firebase';
 import {Link} from 'react-router-dom';
 import styled from 'styled-components';
 import { styled as styledMUI } from '@mui/material/styles';
+import Checkbox from '@mui/material/Checkbox';
+import Tooltip from '@material-ui/core/Tooltip';
+
 
 import {withStyles} from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';
@@ -21,7 +24,7 @@ const StyledContent = styled.div`
 const CssTextField = withStyles({
   root: {
     backgroundColor: 'white',
-    margin: '40px 0px',
+    margin: '40px 0px 0px',
     '& .MuiOutlinedInput-root': {
       '& fieldset': {
         border: '1px solid rgba(0, 0, 0, 0.2)',
@@ -35,6 +38,15 @@ const CssTextField = withStyles({
     },
   },
 })(TextField);
+const StyledCheckbox = styled.div`
+    display: flex;
+    margin: 5px 0px 40px -10px;
+`;
+const StyledCheckboxText = styled.div`
+    margin: auto 0px;
+    color: rgb(70, 70, 70);
+    font-size: 16px;
+`;
 const StyledRecipeSection = styled.div`
     overflow-x: hidden;
     overflow-y: scroll;
@@ -109,7 +121,17 @@ const StyledNoRecipes = styled.div`
 `;
 
 
-export default function PageSearch() {
+export default function PageSearch({uid, userCookbooks}) {
+
+  const [checked, setChecked] = React.useState(false);
+  const getChecked = (event) => {
+    setChecked(event.target.checked);
+    setResponseSearch({recipes: [], query: ''})
+    setRecipes(false)
+    setCoIngredients(false)
+    setLoadingSearch(true)
+    window.localStorage.setItem('searchChecked', JSON.stringify(event.target.value))
+  };
 
   const [loadingSearch, setLoadingSearch] = React.useState(false)
   const [recipes, setRecipes] = React.useState(false)
@@ -136,14 +158,22 @@ export default function PageSearch() {
     if (searchText === searchTextDelayed && searchText !== '') {
       async function getData() {
         const getRecipes = firebase.functions().httpsCallable('get_recipes');
-        const response = await getRecipes({
-          ingredients: searchText
-        }).then(response => response.data)
-        setResponseSearch(response)
+        if (checked) {
+            const response = await getRecipes(
+                {ingredients: searchText, userCookbooks: userCookbooks}
+            ).then(response => response.data)
+            setResponseSearch(response)
+        }
+        else {
+            const response = await getRecipes(
+                {ingredients: searchText, userCookbooks: []}
+            ).then(response => response.data)
+            setResponseSearch(response)
+        }
       }
       getData()
     }
-  }, [searchTextDelayed])
+  }, [searchTextDelayed, checked])
 
   React.useEffect(() => {
     if (searchText && searchText?.toLowerCase() === responseSearch?.query?.toLowerCase()) {
@@ -156,12 +186,18 @@ export default function PageSearch() {
   }, [responseSearch?.query])
 
   React.useEffect(() => {
+    if (uid === "default") {setChecked(false)}
+  }, [uid])
+
+  React.useEffect(() => {
     const storedSearchText = window.localStorage.getItem('searchTextSearch');
     const storedRecipes = window.localStorage.getItem('recipesSearch');
     const storedCoIngredients = window.localStorage.getItem('coIngredientsSearch');
+    const storedChecked = window.localStorage.getItem('searchChecked');
     if ( storedSearchText !== null ) setSearchText(JSON.parse(storedSearchText));
     if ( storedRecipes !== null ) setRecipes(JSON.parse(storedRecipes));
     if ( storedCoIngredients !== null ) setCoIngredients(JSON.parse(storedCoIngredients));
+    if ( storedChecked !== null ) setChecked(JSON.parse(storedChecked));
   }, []);
 
   return (
@@ -171,8 +207,26 @@ export default function PageSearch() {
           <Grid item xs={12}>
             <StyledContent>
                 <CssTextField
-                fullWidth variant="outlined" size='small' placeholder={'Search for recipes in cookbooks (e.g. pasta, tomatoes, cheese, etc.)'} onInput={getSearchText} value={searchText}
+                    fullWidth
+                    variant="outlined"
+                    size='small'
+                    placeholder={'Search for recipes in cookbooks (e.g. pasta, tomatoes, cheese, etc.)'}
+                    onInput={getSearchText}
+                    value={searchText}
                 />
+                <StyledCheckbox>
+                    {uid !== "default" && <Checkbox
+                        checked={checked} onChange={getChecked} inputProps={{ 'aria-label': 'controlled' }} 
+                        sx={{color: "rgb(59, 61, 123)", '&.Mui-checked': {color: "rgb(59, 61, 123)"}}}
+                    />}
+                    {uid === "default" && 
+                        <Tooltip title={ <div style={{fontSize: '14px', backgroundColor: 'black', padding: '5px 10px', margin: '-3px -8px', borderRadius: '5px'}}>Sign in to search with your cookbooks</div>}>
+                            <Checkbox />
+                        </Tooltip>
+                    }
+                    <StyledCheckboxText>Search with only your cookbooks</StyledCheckboxText>
+                </StyledCheckbox>
+                
 
                 {loadingSearch && <Grid item xs={12} style={{justifyContent: 'center', display: 'flex', marginTop: '100px'}}>
                     <CircularProgress/>
