@@ -13,7 +13,7 @@ import Footer from './components/Footer';
 import PageAccount from './components/PageAccount';
 import PageHome from './components/PageHome';
 import PageLogIn from './components/PageLogIn';
-import PageSearch from './components/PageSearch';
+import PageSaved from './components/PageSaved';
 import PageSignUp from './components/PageSignUp';
 import PageTermsOfUse from './components/Footer/termsOfUse';
 
@@ -70,8 +70,8 @@ function App() {
         <Navigation />
         <Switch>
           <Route exact path={ROUTES.ACCOUNT} render={ () => <PageAccount uid={uid} userCookbooks={userCookbooks} getUserCookbooks={getUserCookbooks} />}/>
-          <Route exact path={ROUTES.HOME} render={ () => <PageHome uid={uid} />}/>
-          <Route exact path={ROUTES.SEARCH} render={ () => <PageSearch uid={uid} userCookbooks={userCookbooks} />}/>
+          <Route exact path={ROUTES.HOME} render={ () => <PageHome uid={uid} userCookbooks={userCookbooks} />}/>
+          <Route exact path={ROUTES.SAVED} render={ () => <PageSaved uid={uid} />}/>
           <Route exact path={ROUTES.LOG_IN} component={PageLogIn} />
           <Route exact path={ROUTES.SIGN_UP} component={PageSignUp} />
           <Route exact path={ROUTES.TERMS_OF_USE} component={PageTermsOfUse} />
