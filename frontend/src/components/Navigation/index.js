@@ -48,7 +48,7 @@ const StyledHomeLink = styled.div`
   align-items: center;
   @media (max-width: 1050px) {
     margin: -35px auto;
-    padding: 0px 20px 6px;
+    padding: 0px 20px 7px;
   };
 `;
 const ListOrdered = styled.div`
