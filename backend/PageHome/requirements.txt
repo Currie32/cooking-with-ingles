@@ -1,2 +1,5 @@
 firebase-admin==5.2.0
-recipe-scrapers==13.20.0
+inflect==6.0.0
+jellyfish==0.9.0
+networkx==2.8.7
+numpy==1.21.2
