@@ -47,6 +47,7 @@ def get_recipes(request):
     request_parsed = request.get_json()
     logger.info(request_parsed)
     ingredients_raw = request_parsed['data']['ingredients']
+    user_cookbooks = request_parsed['data']['userCookbooks']
 
     if ingredients_raw:
 
@@ -55,7 +56,7 @@ def get_recipes(request):
         with open('./cookbooks.json', 'rb') as fh:
             cookbooks = json.load(fh)
 
-        recipes = _get_recipes_by_keywords(ingredients, cookbooks)
+        recipes = _get_recipes_by_keywords(ingredients, cookbooks, user_cookbooks)
         recipe_graph = nx.read_gpickle('./recipe_graph.pkl')
         co_ingredients = what_goes_with(ingredients, recipe_graph)
 
@@ -73,23 +74,29 @@ def get_recipes(request):
     return (response, 200, headers)
 
 
-def _get_recipes_by_keywords(text, recipes):
+def _get_recipes_by_keywords(text, recipes, user_cookbooks):
         
     recipes_found_indices = {}
+    
+    if user_cookbooks:
+        recipes = [r for r in recipes if any([r['book'] in c for c in user_cookbooks])]
     
     for index, recipe in enumerate(recipes):
         
         points = 0
-        
+                
         for word in text:
-            
+                
             if word in recipe['title'].lower():
+                points += 1
+            
+            if any([matching_ingredients(word, t) for t in recipe['title'].split()]):
                 points += 1
                 
             if any([matching_ingredients(word, c) for c in recipe['categories']]):
                 points += 1
                 
-            if any([matching_ingredients(word, c) for c in recipe['ingredients_standardised']]):
+            if any([matching_ingredients(word, i) for i in recipe['ingredients_standardised']]):
                 points += 1
 
             if matching_ingredients(word, recipe['book']):

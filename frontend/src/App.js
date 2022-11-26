@@ -37,14 +37,41 @@ function App() {
     return authListener;
   },[]);
 
+  const [userCookbooks, setUserCookbooks] = React.useState([])
+  React.useEffect(() => {
+    if (uid && uid !== 'default') {
+      async function fetchData() {
+        const readUserCookbooks = firebase.functions().httpsCallable('read_user_cookbooks');
+        const response = await readUserCookbooks({uid: uid}).then(response => response.data).catch()
+        setUserCookbooks(response)
+        window.localStorage.setItem('userCookbooks', JSON.stringify(response))
+      }
+      fetchData()
+    }
+  }, [uid])
+  const getUserCookbooks = (selectedCookbooks) => {
+    if (selectedCookbooks === null) {setUserCookbooks([])}
+    else {
+      selectedCookbooks = selectedCookbooks.map(i => i.value)
+      setUserCookbooks(selectedCookbooks);
+    }
+  }
+
+  React.useEffect(() => {
+    const storedUserCookbooks = window.localStorage.getItem('userCookbooks');
+    if ( storedUserCookbooks !== null ) {
+      setUserCookbooks(JSON.parse(storedUserCookbooks));
+    };
+  }, []);
+
   return (
     <Router>
       <div>
         <Navigation />
         <Switch>
-          <Route exact path={ROUTES.ACCOUNT} component={PageAccount}/>
+          <Route exact path={ROUTES.ACCOUNT} render={ () => <PageAccount uid={uid} userCookbooks={userCookbooks} getUserCookbooks={getUserCookbooks} />}/>
           <Route exact path={ROUTES.HOME} render={ () => <PageHome uid={uid} />}/>
-          <Route exact path={ROUTES.SEARCH} component={PageSearch} />
+          <Route exact path={ROUTES.SEARCH} render={ () => <PageSearch uid={uid} userCookbooks={userCookbooks} />}/>
           <Route exact path={ROUTES.LOG_IN} component={PageLogIn} />
           <Route exact path={ROUTES.SIGN_UP} component={PageSignUp} />
           <Route exact path={ROUTES.TERMS_OF_USE} component={PageTermsOfUse} />
