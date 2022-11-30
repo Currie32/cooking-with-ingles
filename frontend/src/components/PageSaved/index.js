@@ -385,8 +385,8 @@ export default function PageSaved({uid}) {
             </StyledRecipeLoading>}
             {Object.keys(recipes).length > 0 && <StyledResultsSection>
               {Object.values(recipes).sort(sortByTitle).filter(
-                recipe => (searchText.split(',').every(
-                  i => (recipe.title.toLowerCase().concat(', ', String(recipe.ingredients).toLowerCase())).includes(i)
+                recipe => (searchText.toLowerCase().replaceAll(',', '').split(' ').every(
+                  i => (recipe.title.toLowerCase().concat(' ', String(recipe.ingredients).toLowerCase())).includes(i)
                 ))
               ).map((recipe, index_recipe) => (
 
