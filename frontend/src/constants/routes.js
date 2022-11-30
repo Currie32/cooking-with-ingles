@@ -1,5 +1,5 @@
 export const ACCOUNT = '/account';
-export const GROCERY_LIST = '/grocery-list';
+export const COOKBOOKS = '/cookbooks';
 export const HOME = '/';
 export const LOG_IN = '/log-in';
 export const PASSWORD_FORGET = '/pw-forget';

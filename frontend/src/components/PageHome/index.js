@@ -1,11 +1,9 @@
 import React from 'react';
 import firebase from 'firebase';
-import {Link} from 'react-router-dom';
 import styled from 'styled-components';
-import { styled as styledMUI } from '@mui/material/styles';
 import Checkbox from '@mui/material/Checkbox';
 import Tooltip from '@material-ui/core/Tooltip';
-
+import { Link } from "react-router-dom";
 
 import {withStyles} from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';
@@ -100,6 +98,10 @@ const StyledBook = styled.div`
     font-weight: 600;
     margin-right: 20px;
     color: rgb(59, 61, 123);
+    &:hover {
+      text-decoration: underline;
+      cursor: pointer;
+  }
 `;
 const StyledPageNumber = styled.div`
 `;
@@ -121,7 +123,7 @@ const StyledNoRecipes = styled.div`
 `;
 
 
-export default function PageHome({uid, userCookbooks}) {
+export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
 
   const [checked, setChecked] = React.useState(false);
   const getChecked = (event) => {
@@ -245,7 +247,10 @@ export default function PageHome({uid, userCookbooks}) {
                         <StyledRecipe key={index}>
                             <StyledRecipeName>{recipe.title}</StyledRecipeName>
                                 <StyledBookAndPage>
-                                    <StyledBook>{recipe.book} <div style={{color: 'black', margin: '0px 5px'}}>by</div> {recipe.author}</StyledBook>
+                                    <Link to="/cookbooks">
+                                    <StyledBook onClick={(e) => getCookbookFromSearch(e.target.textContent)} >{recipe.book} by {recipe.author}</StyledBook>
+                                    </Link>
+                                    
                                     <StyledPageNumber>Page: {recipe.page}</StyledPageNumber>
                                 </StyledBookAndPage>
                                 <StyledIngredientsAndCategories>
