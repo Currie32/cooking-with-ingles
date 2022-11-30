@@ -115,7 +115,7 @@ const StyledIngredient = styled.div`
   margin-top: 12px;
   line-height: 20px;
 `
-const StyledInstructionsSection = styled.td`
+const StyledInstructionsSection = styled.div`
   text-align: justify;
   max-width: 600px;
   padding: 0px 30px;
@@ -127,7 +127,7 @@ const StyledInstructionsSection = styled.td`
 const StyledInstruction = styled.div`
   margin-top: 10px;
 `
-const StyledImage = styled.td`
+const StyledImage = styled.div`
   vertical-align: top;
   padding: 0px 30px;
   display: flex;
@@ -454,11 +454,11 @@ export default function PageSaved({uid}) {
                           }}/>
                         </Hidden>
                         <StyledInstructionsSection>
-                        <div>
-                          {recipe.instructions.map((instruction, index_instruction) => (
-                            <StyledInstruction key={index_instruction}>{instruction}</StyledInstruction>
-                          ))}
-                        </div>
+                          <div>
+                            {recipe.instructions.map((instruction, index_instruction) => (
+                              <StyledInstruction key={index_instruction}>{instruction}</StyledInstruction>
+                            ))}
+                          </div>
                         </StyledInstructionsSection>
                         <Hidden mdDown>
                           <StyledImage>

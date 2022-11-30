@@ -70,10 +70,11 @@ const StyledCoIngredients = styled.div`
     font-style: italic;
     color: rgb(70, 70, 70);
 `;
-const StyledCoIngredientsHeader = styled.p`
+const StyledCoIngredientsHeader = styled.div`
     font-size: 17px;
     font-style: normal;
     display: flex;
+    margin-bottom: 12px;
     color: rgb(0, 0, 0);
 `;
 const StyledCoIngredientsSearchText = styled.div`
