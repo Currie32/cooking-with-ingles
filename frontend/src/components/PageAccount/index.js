@@ -2,12 +2,13 @@ import React from 'react';
 import firebase from 'firebase';
 import styled from 'styled-components'
 import Grid from '@material-ui/core/Grid';
-import CreatableSelect, { components } from "react-select";
+import CreatableSelect from "react-select";
 import Button from '@mui/material/Button';
 import {withStyles} from '@material-ui/core/styles';
 
-import { AuthUserContext, withAuthorization } from '../Session';
+import { AuthUserContext } from '../Session';
 import PasswordChangeForm from './passwordChange';
+import cookbooks from '../../constants/cookbooks.json';
 
 
 const StyledPage = styled.div`
@@ -80,22 +81,6 @@ const StyledRequest = styled.p`
   width: fit-content;
   font-style: italic;
 `;
-
-
-export const cookbooks = [
-  {value: 'A Modern Way to Cook by Anna Jones', label: 'A Modern Way to Cook by Anna Jones'},
-  {value: 'East by Meera Sodha', label: 'East by Meera Sodha'},
-  {value: 'JapanEasy by Tim Anderson', label: 'JapanEasy by Tim Anderson'},
-  {value: 'Mezcla by Ixta Belfrage', label: 'Mezcla by Ixta Belfrage'},
-  {value: 'Neighbourhood by Hetty McKinnon', label: 'Neighbourhood by Hetty McKinnon'},
-  {value: 'One: Pot, Pan, Planet by Anna Jones', label: 'One: Pot, Pan, Planet by Anna Jones'},
-  {value: 'Our Korean Kitchen by Jordan Bourke and Rejina Pyo', label: 'Our Korean Kitchen by Jordan Bourke and Rejina Pyo'},
-  {value: 'Simple by Yotam Ottolenghi', label: 'Simple by Yotam Ottolenghi'},
-  {value: 'Test Kitchen by Yotam Ottolenghi', label: 'Test Kitchen by Yotam Ottolenghi'},
-  {value: 'The CSIRO Total Wellbeing Diet by Manny Noakes', label: 'The CSIRO Total Wellbeing Diet by Manny Noakes'},
-  {value: 'To Asia, With Love by Hetty McKinnon', label: 'To Asia, With Love by Hetty McKinnon'},
-  {value: 'Vegful by Nadia Lim', label: 'Vegful by Nadia Lim'},
-];
 
 
 function PageAccount({uid, userCookbooks, getUserCookbooks}) {
