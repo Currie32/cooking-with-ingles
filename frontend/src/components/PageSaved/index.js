@@ -242,12 +242,12 @@ export default function PageSaved({uid}) {
   }
 
   const [createAccount, setCreateAccount] = React.useState(false)
+  const [validURL, setValidURL] = React.useState(false)
   const [invalidURL, setInvalidURL] = React.useState(false)
   const [url, setUrl] = React.useState(false)
   const [loadingUpdateRecipes, setLoadingUpdateRecipes] = React.useState(false)
   const [updateRecipes, setUpdateRecipes] = React.useState(false)
   const getUpdateRecipes = (toUpdate) => {
-
     if (uid === 'default') {
       setCreateAccount(true)
     }
@@ -265,9 +265,13 @@ export default function PageSaved({uid}) {
           setLoadingUpdateRecipes(false)
           if (response.data.success) {
             setRecipes(response.data.recipes)
-            setOpen(false);
+            setValidURL(true)
             setInvalidURL(false)
             setUrl(false)
+            setTimeout(() => {
+              setOpen(false)
+              setValidURL(false)
+            }, 800)
           }
           else {
             setInvalidURL(true)
@@ -356,6 +360,10 @@ export default function PageSaved({uid}) {
               {loadingUpdateRecipes && <StyledAddRecipeLoading>
                 <CircularProgress/>
               </StyledAddRecipeLoading>}
+
+              {validURL && <StyledAddRecipeText>
+                <p style={{fontSize: '16px'}}>Saved!</p>
+              </StyledAddRecipeText>}
 
               {invalidURL && <StyledAddRecipeText>
                 <p style={{fontSize: '16px'}}>We're unable to get the recipe from this website, please try a different one.</p>
