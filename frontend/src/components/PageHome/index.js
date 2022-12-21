@@ -9,6 +9,8 @@ import {withStyles} from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';
 import Grid from '@material-ui/core/Grid';
 import CircularProgress from '@material-ui/core/CircularProgress';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import Typography from '@mui/material/Typography';
 
 
 const StyledPage = styled.div`
@@ -22,7 +24,7 @@ const StyledContent = styled.div`
 const CssTextField = withStyles({
   root: {
     backgroundColor: 'white',
-    margin: '40px 0px 0px',
+    margin: '0px 0px 0px',
     '& .MuiOutlinedInput-root': {
       '& fieldset': {
         border: '1px solid rgba(0, 0, 0, 0.2)',
@@ -36,14 +38,24 @@ const CssTextField = withStyles({
     },
   },
 })(TextField);
+const StyledTooltipExample = styled.div`
+  font-size: 14px;
+  padding: 0px 0px 5px;
+`;
 const StyledCheckbox = styled.div`
     display: flex;
-    margin: 5px 0px 40px -10px;
+    margin: 5px 0px 00px -10px;
 `;
 const StyledCheckboxText = styled.div`
     margin: auto 0px;
     color: rgb(70, 70, 70);
     font-size: 16px;
+`;
+const StyledRequest = styled.p`
+  margin: 0px 0px 25px;
+  width: fit-content;
+  font-style: italic;
+  font-size: 15px;
 `;
 const StyledRecipeSection = styled.div`
     overflow-x: hidden;
@@ -65,7 +77,7 @@ const StyledRecipeSection = styled.div`
     background-attachment: local, local, scroll, scroll;
 `;
 const StyledCoIngredients = styled.div`
-    margin: -20px auto 35px;
+    margin: 0px auto 35px;
     font-size: 16px;
     font-style: italic;
     color: rgb(70, 70, 70);
@@ -88,7 +100,10 @@ const StyledRecipe = styled.div`
 `;
 const StyledRecipeName = styled.div`
   font-size: 18px;
-  @media (max-width: 499px) {font-size: 15px};
+  @media (max-width: 499px) {
+    font-size: 17px;
+    font-weight: 600;
+  };
 `;
 const StyledBookAndPage = styled.div`
     display: flex;
@@ -144,7 +159,12 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
     setRecipes(false)
     setCoIngredients(false)
     if (!e) {setSearchText(''); setLoadingSearch(false)}
-    else if (e.target.value === '') {setSearchText(''); setLoadingSearch(false)}
+    else if (e.target.value === '') {
+      setSearchText('');
+      setLoadingSearch(false)
+      window.localStorage.setItem('searchTextHome', JSON.stringify(e.target.value))
+      window.localStorage.setItem('recipesHome', JSON.stringify(false))
+    }
     else {
         setLoadingSearch(true);
         setSearchText(e.target.value);
@@ -209,6 +229,18 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
 
           <Grid item xs={12}>
             <StyledContent>
+                <Tooltip title={
+                  <React.Fragment>
+                    <Typography>Example searches:</Typography>
+                    <StyledTooltipExample>• Vegetarian pasta</StyledTooltipExample>
+                    <StyledTooltipExample>• Chocolate dessert</StyledTooltipExample>
+                    <StyledTooltipExample>• "Tomato breakfast"</StyledTooltipExample>
+                    <StyledTooltipExample>• "Vietnamese" salad</StyledTooltipExample>
+                    <StyledTooltipExample>• Easy lunch</StyledTooltipExample>
+                  </React.Fragment>
+                }>
+                  <InfoOutlinedIcon style={{margin: '30px 0px 2px', float: 'right', fontSize: '16px'}}/>
+                </Tooltip>
                 <CssTextField
                     fullWidth
                     variant="outlined"
@@ -229,7 +261,10 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
                     }
                     <StyledCheckboxText>Search with only your cookbooks</StyledCheckboxText>
                 </StyledCheckbox>
-                
+
+                <StyledRequest>
+                  Want to search another cookbook? Request it by <a target="_blank" href="https://docs.google.com/forms/d/e/1FAIpQLSfPveAlQDH0RIx0qWWmibA2nKxq7Rl7wIFn6j_Mysba1iZJlQ/viewform">clicking here.</a>
+                </StyledRequest>
 
                 {loadingSearch && <Grid item xs={12} style={{justifyContent: 'center', display: 'flex', marginTop: '100px'}}>
                     <CircularProgress/>
