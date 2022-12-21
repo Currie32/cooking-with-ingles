@@ -234,7 +234,10 @@ export default function PageSaved({uid}) {
   const [searchText, setSearchText] = React.useState("")
   const getSearchText = (text) => {
     if (!text) {setSearchText('')}
-    else if (text.target.value === '') {setSearchText('')}
+    else if (text.target.value === '') {
+      setSearchText('')
+      window.localStorage.setItem('searchTextSaved', JSON.stringify(text.target.value))
+    }
     else {
       setSearchText(text.target.value);
       window.localStorage.setItem('searchTextSaved', JSON.stringify(text.target.value))

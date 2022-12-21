@@ -4,7 +4,6 @@ import {
     BrowserRouter as Router,
     Switch,
     Route,
-    Redirect,
 } from 'react-router-dom';
 
 import Navigation from './components/Navigation';
@@ -36,6 +35,18 @@ function App() {
     );
     return authListener;
   },[]);
+
+  // Warm up get_recipes API
+  const [testing, setTesting] = React.useState(false);
+  React.useEffect(() => {
+    if (!testing) {
+      async function fetchData() {
+        const getRecipes = firebase.functions().httpsCallable('get_recipes');
+        const response = await getRecipes({ingredients: 'pasta', userCookbooks: []}).catch()
+      }
+      fetchData()
+    }
+  }, [])
 
   const [userCookbooks, setUserCookbooks] = React.useState([])
   React.useEffect(() => {
