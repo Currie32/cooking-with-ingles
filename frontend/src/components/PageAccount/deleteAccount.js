@@ -50,7 +50,7 @@ const CheckboxTerms = withStyles({
 function deleteUserDocumentsFunction({uid}) {
   const functions = getFunctions();
   const deleteUserDocuments = httpsCallable(functions, 'delete_user');
-  deleteUserDocuments({uid: uid}).catch(e => console.log(e))
+  deleteUserDocuments({uid: uid}).catch()
 }
 
 
@@ -81,7 +81,6 @@ export default function DeleteAccount() {
       navigate(ROUTES.HOME)
     }
     catch (error) {
-      console.log(error)
       // An error ocurred
     }
   }

@@ -33,9 +33,7 @@ export function parseRecipe(recipe) {
 
 export function parseVariations(text) {
   // Split the text by '\n' to get individual variation lines
-  console.log(text)
   const variationLines = text.split('\n');
-  console.log(variationLines)
 
   // Use regular expressions to extract the variation type and description
   const variationRegex = /^(?:(?:\d+\.\s*)?([\w\s.-]+):\s*)(.*(?:\S.*\S)?)\s*$/;
@@ -54,6 +52,5 @@ export function parseVariations(text) {
       parsedVariations.push([type, description]);
     }
   }
-  console.log(parsedVariations)
   return parsedVariations;
 }

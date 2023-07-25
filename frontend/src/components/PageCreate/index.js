@@ -196,7 +196,6 @@ export default function PageCreate() {
       return data;
     }
     catch (error) {
-      console.log(error)
     }
   }
   async function getRecipeTitles() {
@@ -234,7 +233,6 @@ export default function PageCreate() {
       return data;
     }
     catch (error) {
-      console.log(error)
     }
   }
   async function getRecipe(recipeTitle) {
@@ -268,7 +266,6 @@ export default function PageCreate() {
       return data;
     }
     catch (error) {
-      console.log(error)
       setRecipeVariationsError(true)
     }
   }
