@@ -1,11 +1,11 @@
-import React from 'react';
+
+import { getAnalytics, logEvent } from "firebase/analytics";
+import Grid from '@material-ui/core/Grid';
 import { Link } from 'react-router-dom';
 import styled from "styled-components";
-import Grid from '@material-ui/core/Grid';
-import firebase from 'firebase';
-import * as ROUTES from '../../constants/routes';
 
 import buyMeACoffee from './buyMeACoffee.png';
+import * as ROUTES from '../../constants/routes';
 
 
 const FooterSection = styled.div`
@@ -50,6 +50,8 @@ const StyledBuyMeACoffee = styled.img`
 
 export default function Footer() {
 
+  const analytics = getAnalytics()
+
   function removeElement() {
       var elem = document.getElementById("chartjs-tooltip");
       if (elem) {
@@ -70,12 +72,12 @@ export default function Footer() {
               <ListItem>Cooking with Ingles. All rights reserved.</ListItem>
               <ListItem><StyledLink to={ROUTES.TERMS_OF_USE}>Terms of Use</StyledLink></ListItem>
               <ListItem>
-                <a target="_blank" href="https://github.com/Currie32/cooking-with-ingles" onClick={() => {firebase.analytics().logEvent('Github repo')}}>
+                <a target="_blank" rel="noreferrer" href="https://github.com/Currie32/cooking-with-ingles" onClick={() => {logEvent(analytics, 'Github repo')}}>
                   We're open source!
                 </a>
               </ListItem>
               <ListItemLast>
-                <a target="_blank" rel="noreferrer" href="https://www.buymeacoffee.com/Currie32" onClick={() => {firebase.analytics().logEvent('Buy Me a Coffee, Maybe?')}}>
+                <a target="_blank" rel="noreferrer" href="https://www.buymeacoffee.com/Currie32" onClick={() => {logEvent(analytics, 'Buy Me a Coffee, Maybe?')}}>
                   <StyledBuyMeACoffee src={buyMeACoffee} />
                 </a>
               </ListItemLast>

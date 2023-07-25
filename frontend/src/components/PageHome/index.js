@@ -1,25 +1,20 @@
-import React from 'react';
-import firebase from 'firebase';
-import styled from 'styled-components';
-import Checkbox from '@mui/material/Checkbox';
-import Tooltip from '@material-ui/core/Tooltip';
-import { Link } from "react-router-dom";
-
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import Grid from '@material-ui/core/Grid';
 import {withStyles} from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';
-import Grid from '@material-ui/core/Grid';
-import CircularProgress from '@material-ui/core/CircularProgress';
+import Tooltip from '@material-ui/core/Tooltip';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import Checkbox from '@mui/material/Checkbox';
 import Typography from '@mui/material/Typography';
+import { Fragment, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import styled from 'styled-components';
 
 
-const StyledPage = styled.div`
-  min-height: 570px;
-  margin: 0px 20px;
-`;
-const StyledContent = styled.div`
-    margin: 80px auto 0px;
-    max-width: 700px;
+const Content = styled.div`
+  margin: auto;
+  max-width: 700px;
 `;
 const CssTextField = withStyles({
   root: {
@@ -141,7 +136,9 @@ const StyledNoRecipes = styled.div`
 
 export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
 
-  const [checked, setChecked] = React.useState(false);
+  const functions = getFunctions();
+
+  const [checked, setChecked] = useState(false);
   const getChecked = (event) => {
     setChecked(event.target.checked);
     setResponseSearch({recipes: [], query: ''})
@@ -151,10 +148,10 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
     window.localStorage.setItem('searchCheckedHome', JSON.stringify(event.target.value))
   };
 
-  const [loadingSearch, setLoadingSearch] = React.useState(false)
-  const [recipes, setRecipes] = React.useState(false)
-  const [coIngredients, setCoIngredients] = React.useState(false)
-  const [searchText, setSearchText] = React.useState('')
+  const [loadingSearch, setLoadingSearch] = useState(false)
+  const [recipes, setRecipes] = useState(false)
+  const [coIngredients, setCoIngredients] = useState(false)
+  const [searchText, setSearchText] = useState('')
   const getSearchText = (e) => {
     setRecipes(false)
     setCoIngredients(false)
@@ -171,16 +168,16 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
         window.localStorage.setItem('searchTextHome', JSON.stringify(e.target.value))
     }
   }
-  const [searchTextDelayed, setSearchTextDelayed] = React.useState('')
-  React.useEffect(() => {
+  const [searchTextDelayed, setSearchTextDelayed] = useState('')
+  useEffect(() => {
     setTimeout(() => {setSearchTextDelayed(searchText)}, 500)
   }, [searchText])
 
-  const [responseSearch, setResponseSearch] = React.useState({recipes: [], query: ''})
-  React.useEffect(() => {
+  const [responseSearch, setResponseSearch] = useState({recipes: [], query: ''})
+  useEffect(() => {
     if (searchText === searchTextDelayed && searchText !== '') {
       async function getData() {
-        const getRecipes = firebase.functions().httpsCallable('get_recipes');
+        const getRecipes = httpsCallable(functions, 'get_recipes');
         if (checked) {
             const response = await getRecipes(
                 {ingredients: searchText, userCookbooks: userCookbooks}
@@ -198,7 +195,7 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
     }
   }, [searchTextDelayed, checked])
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (searchText && searchText?.toLowerCase() === responseSearch?.query?.toLowerCase()) {
       setRecipes(responseSearch.recipes)
       setCoIngredients(responseSearch.co_ingredients)
@@ -208,11 +205,11 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
     }
   }, [responseSearch?.query])
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (uid === "default") {setChecked(false)}
   }, [uid])
 
-  React.useEffect(() => {
+  useEffect(() => {
     const storedSearchText = window.localStorage.getItem('searchTextHome');
     const storedRecipes = window.localStorage.getItem('recipesHome');
     const storedCoIngredients = window.localStorage.getItem('coIngredientsHome');
@@ -224,87 +221,77 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
   }, []);
 
   return (
-    <StyledPage>
-        <Grid container spacing={3}>
+    <Content>
+      <Tooltip title={
+        <Fragment>
+          <Typography>Example searches:</Typography>
+          <StyledTooltipExample>• Vegetarian pasta</StyledTooltipExample>
+          <StyledTooltipExample>• Chocolate dessert</StyledTooltipExample>
+          <StyledTooltipExample>• "Tomato breakfast"</StyledTooltipExample>
+          <StyledTooltipExample>• "Vietnamese" salad</StyledTooltipExample>
+          <StyledTooltipExample>• Easy lunch</StyledTooltipExample>
+        </Fragment>
+      }>
+        <InfoOutlinedIcon style={{margin: '30px 0px 2px', float: 'right', fontSize: '16px'}}/>
+      </Tooltip>
+      <CssTextField
+          fullWidth
+          variant="outlined"
+          size='small'
+          placeholder={'Search for recipes in cookbooks (e.g. pasta, tomatoes, cheese, etc.)'}
+          onInput={getSearchText}
+          value={searchText}
+      />
+      <StyledCheckbox>
+          {uid !== "default" && <Checkbox
+              checked={checked} onChange={getChecked} inputProps={{ 'aria-label': 'controlled' }} 
+              sx={{color: "rgb(59, 61, 123)", '&.Mui-checked': {color: "rgb(59, 61, 123)"}}}
+          />}
+          {uid === "default" && 
+              <Tooltip title={ <div style={{fontSize: '14px', backgroundColor: 'black', padding: '5px 10px', margin: '-3px -8px', borderRadius: '5px'}}>Sign in to search with your cookbooks</div>}>
+                  <Checkbox checked={false} />
+              </Tooltip>
+          }
+          <StyledCheckboxText>Search with only your cookbooks</StyledCheckboxText>
+      </StyledCheckbox>
 
-          <Grid item xs={12}>
-            <StyledContent>
-                <Tooltip title={
-                  <React.Fragment>
-                    <Typography>Example searches:</Typography>
-                    <StyledTooltipExample>• Vegetarian pasta</StyledTooltipExample>
-                    <StyledTooltipExample>• Chocolate dessert</StyledTooltipExample>
-                    <StyledTooltipExample>• "Tomato breakfast"</StyledTooltipExample>
-                    <StyledTooltipExample>• "Vietnamese" salad</StyledTooltipExample>
-                    <StyledTooltipExample>• Easy lunch</StyledTooltipExample>
-                  </React.Fragment>
-                }>
-                  <InfoOutlinedIcon style={{margin: '30px 0px 2px', float: 'right', fontSize: '16px'}}/>
-                </Tooltip>
-                <CssTextField
-                    fullWidth
-                    variant="outlined"
-                    size='small'
-                    placeholder={'Search for recipes in cookbooks (e.g. pasta, tomatoes, cheese, etc.)'}
-                    onInput={getSearchText}
-                    value={searchText}
-                />
-                <StyledCheckbox>
-                    {uid !== "default" && <Checkbox
-                        checked={checked} onChange={getChecked} inputProps={{ 'aria-label': 'controlled' }} 
-                        sx={{color: "rgb(59, 61, 123)", '&.Mui-checked': {color: "rgb(59, 61, 123)"}}}
-                    />}
-                    {uid === "default" && 
-                        <Tooltip title={ <div style={{fontSize: '14px', backgroundColor: 'black', padding: '5px 10px', margin: '-3px -8px', borderRadius: '5px'}}>Sign in to search with your cookbooks</div>}>
-                            <Checkbox checked={false} />
-                        </Tooltip>
-                    }
-                    <StyledCheckboxText>Search with only your cookbooks</StyledCheckboxText>
-                </StyledCheckbox>
+      <StyledRequest>
+        Want to search another cookbook? Request it by <a target="_blank" rel="noreferrer" href="https://docs.google.com/forms/d/e/1FAIpQLSfPveAlQDH0RIx0qWWmibA2nKxq7Rl7wIFn6j_Mysba1iZJlQ/viewform">clicking here.</a>
+      </StyledRequest>
 
-                <StyledRequest>
-                  Want to search another cookbook? Request it by <a target="_blank" href="https://docs.google.com/forms/d/e/1FAIpQLSfPveAlQDH0RIx0qWWmibA2nKxq7Rl7wIFn6j_Mysba1iZJlQ/viewform">clicking here.</a>
-                </StyledRequest>
+      {loadingSearch && <Grid item xs={12} style={{justifyContent: 'center', display: 'flex', marginTop: '100px'}}>
+          <CircularProgress/>
+      </Grid>}
 
-                {loadingSearch && <Grid item xs={12} style={{justifyContent: 'center', display: 'flex', marginTop: '100px'}}>
-                    <CircularProgress/>
-                </Grid>}
+      {coIngredients?.length > 0 && <StyledCoIngredients>
+          <StyledCoIngredientsHeader>
+              These ingredients are commonly used with: <StyledCoIngredientsSearchText>{searchText}</StyledCoIngredientsSearchText>
+          </StyledCoIngredientsHeader>
+          {coIngredients.join(', ')}
+      </StyledCoIngredients>}
 
-                {coIngredients?.length > 0 && <StyledCoIngredients>
-                    <StyledCoIngredientsHeader>
-                        These ingredients are commonly used with: <StyledCoIngredientsSearchText>{searchText}</StyledCoIngredientsSearchText>
-                    </StyledCoIngredientsHeader>
-                    {coIngredients.join(', ')}
-                </StyledCoIngredients>}
-
-                {recipes?.length > 0 && <StyledRecipeSection>
-                    
-                    {recipes?.map((recipe, index) => (
-                        <StyledRecipe key={index}>
-                            <StyledRecipeName>{recipe.title}</StyledRecipeName>
-                                <StyledBookAndPage>
-                                    <Link to="/cookbooks">
-                                    <StyledBook onClick={(e) => getCookbookFromSearch(e.target.textContent)} >{recipe.book} by {recipe.author}</StyledBook>
-                                    </Link>
-                                    
-                                    <StyledPageNumber>Page: {recipe.page}</StyledPageNumber>
-                                </StyledBookAndPage>
-                                <StyledIngredientsAndCategories>
-                                    <StyledIngredientsAndCategoriesTitle>Ingredients:</StyledIngredientsAndCategoriesTitle>
-                                    {recipe.ingredients.join(', ')}
-                                </StyledIngredientsAndCategories>
-                        </StyledRecipe>
-                    ))}
-                </StyledRecipeSection>}
-                {recipes?.length == 0 && <StyledNoRecipes>
-                    No recipes were found with these ingredients.
-                </StyledNoRecipes>}
-
-            </StyledContent>
-            
-            
-          </Grid>
-        </Grid>
-    </StyledPage>
+      {recipes?.length > 0 && <StyledRecipeSection>
+          
+          {recipes?.map((recipe, index) => (
+              <StyledRecipe key={index}>
+                  <StyledRecipeName>{recipe.title}</StyledRecipeName>
+                      <StyledBookAndPage>
+                          <Link to="/cookbooks">
+                          <StyledBook onClick={(e) => getCookbookFromSearch(e.target.textContent)}>{recipe.book} by {recipe.author}</StyledBook>
+                          </Link>
+                          
+                          <StyledPageNumber>Page: {recipe.page}</StyledPageNumber>
+                      </StyledBookAndPage>
+                      <StyledIngredientsAndCategories>
+                          <StyledIngredientsAndCategoriesTitle>Ingredients:</StyledIngredientsAndCategoriesTitle>
+                          {recipe.ingredients.join(', ')}
+                      </StyledIngredientsAndCategories>
+              </StyledRecipe>
+          ))}
+      </StyledRecipeSection>}
+      {recipes?.length === 0 && <StyledNoRecipes>
+          No recipes were found with these ingredients.
+      </StyledNoRecipes>}
+    </Content>
   );
 }

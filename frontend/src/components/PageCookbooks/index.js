@@ -1,21 +1,15 @@
-import React from 'react';
-import firebase from 'firebase';
-import styled from 'styled-components';
-
-import CreatableSelect from "react-select";
-import Grid from '@material-ui/core/Grid';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import CircularProgress from '@material-ui/core/CircularProgress';
+import styled from 'styled-components';
+import { useEffect, useState } from "react";
+import CreatableSelect from "react-select";
 
 import cookbooks from '../../constants/cookbooks.json';
 
 
-const StyledPage = styled.div`
-  min-height: 570px;
-  margin: 0px 20px;
-`;
-const StyledContent = styled.div`
-    margin: 80px auto 0px;
-    max-width: 700px;
+const Content = styled.div`
+  margin: auto;
+  max-width: 700px;
 `;
 const menuStyles = {
   control: (styles, state) => ({
@@ -96,13 +90,14 @@ const StyledIngredientsTitle = styled.div`
 `;
 
 
-
 export default function PageCookbooks({cookbookFromSearch}) {
 
-  const [loadingSearch, setLoadingSearch] = React.useState(false)
-  const [recipes, setRecipes] = React.useState(false)
+  const functions = getFunctions();
 
-  const [loadCookbook, setLoadCookbook] = React.useState(false)
+  const [loadingSearch, setLoadingSearch] = useState(false)
+  const [recipes, setRecipes] = useState(false)
+
+  const [loadCookbook, setLoadCookbook] = useState(false)
   const getCookbook = (selectedCookbook) => {
     if (selectedCookbook === null) {setRecipes([])}
     else {
@@ -113,7 +108,7 @@ export default function PageCookbooks({cookbookFromSearch}) {
     }
   }
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (cookbookFromSearch) {
       setRecipes(false)
       setLoadingSearch(true)
@@ -122,10 +117,10 @@ export default function PageCookbooks({cookbookFromSearch}) {
     }
   }, [cookbookFromSearch])
 
-  React.useEffect(() => {
+  useEffect(() => {
     async function fetchData() {
       if (loadCookbook) {
-        const readCookbook = firebase.functions().httpsCallable('read_cookbook');
+        const readCookbook = httpsCallable(functions, 'read_cookbook');
         await readCookbook({cookbook: loadCookbook}).then(response => {
           setLoadingSearch(false)
           setRecipes(response.data.recipes)
@@ -136,7 +131,7 @@ export default function PageCookbooks({cookbookFromSearch}) {
     fetchData()
   }, [loadCookbook])
 
-  React.useEffect(() => {
+  useEffect(() => {
     const storedLoadCookbook = window.localStorage.getItem('cookbookCookbooks');
     const storedRecipesCookbook = window.localStorage.getItem('recipesCookbooks');
     if ( storedLoadCookbook !== null ) {setLoadCookbook(JSON.parse(storedLoadCookbook))};
@@ -147,43 +142,32 @@ export default function PageCookbooks({cookbookFromSearch}) {
   }, []);
 
   return (
-    <StyledPage>
-        <Grid container spacing={3}>
+    <Content>
+      <CreatableSelect
+        components={{DropdownIndicator: null}}
+        options={cookbooks}
+        value={loadCookbook ? [loadCookbook].map(v => {return ({label: v, value: v})}) : false}
+        onChange={getCookbook}
+        placeholder={'See all the recipes from a cookbook'}
+        styles={menuStyles}
+      />
+        
+      {loadingSearch && <div style={{justifyContent: 'center', display: 'flex', marginTop: '100px'}}>
+          <CircularProgress/>
+      </div>}
 
-          <Grid item xs={12}>
-            <StyledContent>
-              <CreatableSelect
-                components={{DropdownIndicator: null}}
-                options={cookbooks}
-                value={loadCookbook ? [loadCookbook].map(v => {return ({label: v, value: v})}) : false}
-                onChange={getCookbook}
-                placeholder={'See all the recipes from a cookbook'}
-                styles={menuStyles}
-              />
-                
-                {loadingSearch && <Grid item xs={12} style={{justifyContent: 'center', display: 'flex', marginTop: '100px'}}>
-                    <CircularProgress/>
-                </Grid>}
-
-                {recipes?.length > 0 && <StyledRecipeSection>
-                    
-                    {recipes?.map((recipe, index) => (
-                        <StyledRecipe key={index}>
-                            <StyledRecipeName>{recipe.title}</StyledRecipeName>
-                              <StyledPageNumber>Page: {recipe.page}</StyledPageNumber>
-                              <StyledIngredients>
-                                <StyledIngredientsTitle>Ingredients:</StyledIngredientsTitle>
-                                  {recipe.ingredients.join(', ')}
-                              </StyledIngredients>
-                        </StyledRecipe>
-                    ))}
-                </StyledRecipeSection>}
-
-            </StyledContent>
-            
-            
-          </Grid>
-        </Grid>
-    </StyledPage>
+      {recipes?.length > 0 && <StyledRecipeSection>
+        {recipes?.map((recipe, index) => (
+          <StyledRecipe key={index}>
+            <StyledRecipeName>{recipe.title}</StyledRecipeName>
+            <StyledPageNumber>Page: {recipe.page}</StyledPageNumber>
+            <StyledIngredients>
+              <StyledIngredientsTitle>Ingredients:</StyledIngredientsTitle>
+                {recipe.ingredients.join(', ')}
+            </StyledIngredients>
+          </StyledRecipe>
+        ))}
+      </StyledRecipeSection>}
+    </Content>
   );
 }

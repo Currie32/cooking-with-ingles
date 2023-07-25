@@ -1,32 +1,26 @@
-import React from 'react';
-import firebase from 'firebase';
-import {Link} from 'react-router-dom';
-import styled from 'styled-components';
-import { styled as styledMUI } from '@mui/material/styles';
-
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import Hidden from '@material-ui/core/Hidden';
 import {withStyles} from '@material-ui/core/styles';
+import TextField from '@material-ui/core/TextField';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import Accordion from '@mui/material/Accordion';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import AccordionSummary from '@mui/material/AccordionSummary';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
-import TextField from '@material-ui/core/TextField';
-import Accordion from '@mui/material/Accordion';
-import AccordionSummary from '@mui/material/AccordionSummary';
-import AccordionDetails from '@mui/material/AccordionDetails';
+import { styled as styledMUI } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import Grid from '@material-ui/core/Grid';
-import CircularProgress from '@material-ui/core/CircularProgress';
-import Hidden from '@material-ui/core/Hidden';
+import { useEffect, useState } from "react";
+import {Link} from 'react-router-dom';
+import styled from 'styled-components';
 
 import '../../App.css'
 
 
-const StyledPage = styled.div`
-  min-height: 580px;
-  margin: 0px 20px;
-`;
 const StyledButtonAddRecipe = styled.div`
   margin: 120px auto 20px;
   width: 300px;
@@ -212,16 +206,16 @@ function sortByTitle( a, b ) {
 
 export default function PageSaved({uid}) {
 
-  const [loadingRecipes, setLoadingRecipes] = React.useState(false)
-  // var data = require('../../data.json');
-  // const [recipes, setRecipes] = React.useState(data)
-  const [recipes, setRecipes] = React.useState({})
-  React.useEffect(() => {
+  const functions = getFunctions();
+
+  const [loadingRecipes, setLoadingRecipes] = useState(false)
+  const [recipes, setRecipes] = useState({})
+  useEffect(() => {
     if (uid) {
       setLoadingRecipes(true)
       setRecipes({})
       async function fetchData() {
-        const readRecipes = firebase.functions().httpsCallable('read_recipes');
+        const readRecipes = httpsCallable(functions, 'read_recipes');
         let response = await readRecipes({uid: uid}).then(response => response.data)
         setLoadingRecipes(false)
         setRecipes(response)
@@ -231,7 +225,7 @@ export default function PageSaved({uid}) {
     }
   }, [uid])
 
-  const [searchText, setSearchText] = React.useState("")
+  const [searchText, setSearchText] = useState("")
   const getSearchText = (text) => {
     if (!text) {setSearchText('')}
     else if (text.target.value === '') {
@@ -244,12 +238,12 @@ export default function PageSaved({uid}) {
     }
   }
 
-  const [createAccount, setCreateAccount] = React.useState(false)
-  const [validURL, setValidURL] = React.useState(false)
-  const [invalidURL, setInvalidURL] = React.useState(false)
-  const [url, setUrl] = React.useState(false)
-  const [loadingUpdateRecipes, setLoadingUpdateRecipes] = React.useState(false)
-  const [updateRecipes, setUpdateRecipes] = React.useState(false)
+  const [createAccount, setCreateAccount] = useState(false)
+  const [validURL, setValidURL] = useState(false)
+  const [invalidURL, setInvalidURL] = useState(false)
+  const [url, setUrl] = useState(false)
+  const [loadingUpdateRecipes, setLoadingUpdateRecipes] = useState(false)
+  const [updateRecipes, setUpdateRecipes] = useState(false)
   const getUpdateRecipes = (toUpdate) => {
     if (uid === 'default') {
       setCreateAccount(true)
@@ -260,10 +254,10 @@ export default function PageSaved({uid}) {
       setUpdateRecipes(url)
     }
   }
-  React.useEffect(() => {
+  useEffect(() => {
     async function fetchData() {
       if (url) {
-        const addRecipe = firebase.functions().httpsCallable('add_recipe');
+        const addRecipe = httpsCallable(functions, 'add_recipe');
         await addRecipe({url: url, uid: uid}).then(response => {
           setLoadingUpdateRecipes(false)
           if (response.data.success) {
@@ -285,7 +279,7 @@ export default function PageSaved({uid}) {
     fetchData()
   }, [updateRecipes])
 
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
 
   const handleClickOpen = () => {
     setOpen(true)};
@@ -296,17 +290,17 @@ export default function PageSaved({uid}) {
     setUrl(false)
   };
 
-  const [recipeToDelete, setRecipeToDelete] = React.useState(false)
-  const [deleteRecipe, setDeleteRecipe] = React.useState(false)
+  const [recipeToDelete, setRecipeToDelete] = useState(false)
+  const [deleteRecipe, setDeleteRecipe] = useState(false)
   const getDeleteRecipe = (event, valueNew) => {setDeleteRecipe(event)}
-  const [openDeleteRecipe, setOpenDeleteRecipe] = React.useState(false);
+  const [openDeleteRecipe, setOpenDeleteRecipe] = useState(false);
   const handleClickOpenDeleteRecipe = (recipe) => {
     setOpenDeleteRecipe(true)
     setRecipeToDelete(recipe)
   };
   const handleCloseDeleteRecipe = () => {setOpenDeleteRecipe(false);};
 
-  React.useEffect(() => {
+  useEffect(() => {
     setOpenDeleteRecipe(false)
     if (deleteRecipe && recipeToDelete) {
       const filteredRecipes = Object.keys(recipes)
@@ -319,7 +313,7 @@ export default function PageSaved({uid}) {
       setDeleteRecipe(true)
 
       async function fetchData() {
-        const deleteRecipe = firebase.functions().httpsCallable('delete_recipe');
+        const deleteRecipe = httpsCallable(functions, 'delete_recipe');
         await deleteRecipe({recipes: filteredRecipes, uid: uid}).then(response => {
           setDeleteRecipe(false)
         })
@@ -328,7 +322,7 @@ export default function PageSaved({uid}) {
     }
   }, [deleteRecipe])
 
-  React.useEffect(() => {
+  useEffect(() => {
     const storedRecipes = window.localStorage.getItem('recipesSaved');
     const storedSearchText = window.localStorage.getItem('searchTextSaved');
     if ( storedRecipes !== null ) {
@@ -339,148 +333,145 @@ export default function PageSaved({uid}) {
   }, []);
 
   return (
-    <StyledPage className="App">
-        <Grid container spacing={3}>
+    <div>
+      <StyledButtonAddRecipe>
+        <ButtonAddRecipe color="success" variant="outlined" onClick={handleClickOpen}>
+          Add recipe
+        </ButtonAddRecipe>
+      </StyledButtonAddRecipe>
 
-          <StyledButtonAddRecipe>
-            <ButtonAddRecipe color="success" variant="outlined" onClick={handleClickOpen}>
+      <Dialog open={open} onClose={handleClose}>
+        <StyledDialog>
+          <StyledAddRecipeTextField>
+            <TextField fullWidth={true} id="outlined-basic" label="URL of recipe" variant="outlined" onChange={(event) => {setUrl(event.target.value)}} />
+          </StyledAddRecipeTextField>
+
+          <StyledAddRecipeButton>
+            <Button variant="contained" size="large" onClick={getUpdateRecipes}>
               Add recipe
-            </ButtonAddRecipe>
-          </StyledButtonAddRecipe>
+            </Button>
+          </StyledAddRecipeButton>
 
-          <Dialog open={open} onClose={handleClose}>
-            <StyledDialog>
-              <StyledAddRecipeTextField>
-                <TextField fullWidth={true} id="outlined-basic" label="URL of recipe" variant="outlined" onChange={(event) => {setUrl(event.target.value)}} />
-              </StyledAddRecipeTextField>
+          {loadingUpdateRecipes && <StyledAddRecipeLoading>
+            <CircularProgress/>
+          </StyledAddRecipeLoading>}
 
-              <StyledAddRecipeButton>
-                <Button variant="contained" size="large" onClick={getUpdateRecipes}>
-                  Add recipe
-                </Button>
-              </StyledAddRecipeButton>
+          {validURL && <StyledAddRecipeText>
+            <p style={{fontSize: '16px'}}>Saved!</p>
+          </StyledAddRecipeText>}
 
-              {loadingUpdateRecipes && <StyledAddRecipeLoading>
-                <CircularProgress/>
-              </StyledAddRecipeLoading>}
+          {invalidURL && <StyledAddRecipeText>
+            <p style={{fontSize: '16px'}}>We're unable to get the recipe from this website, please try a different one.</p>
+          </StyledAddRecipeText>}
 
-              {validURL && <StyledAddRecipeText>
-                <p style={{fontSize: '16px'}}>Saved!</p>
-              </StyledAddRecipeText>}
+          {createAccount && <StyledAddRecipeText>
+            <p style={{fontSize: '16px'}}><StyledLink to={{pathname: "/sign-up"}}>Create an account</StyledLink> to add your own recipes.</p>
+          </StyledAddRecipeText>}
 
-              {invalidURL && <StyledAddRecipeText>
-                <p style={{fontSize: '16px'}}>We're unable to get the recipe from this website, please try a different one.</p>
-              </StyledAddRecipeText>}
+        </StyledDialog>
+      </Dialog>
 
-              {createAccount && <StyledAddRecipeText>
-                <p style={{fontSize: '16px'}}><StyledLink to={{pathname: "/sign-up"}}>Create an account</StyledLink> to add your own recipes.</p>
-              </StyledAddRecipeText>}
+      <div>
+        <CssTextField
+          fullWidth variant="outlined" size='small' placeholder={'Filter recipes (e.g. Thai, noodles, coconut milk, etc.)'} onInput={getSearchText} value={searchText}
+        />
+        {loadingRecipes && <StyledRecipeLoading>
+          <CircularProgress/>
+        </StyledRecipeLoading>}
+        {Object.keys(recipes).length > 0 && <StyledResultsSection>
+          {Object.values(recipes).sort(sortByTitle).filter(
+            recipe => (searchText.toLowerCase().replaceAll(',', '').split(' ').every(
+              i => (recipe.title.toLowerCase().concat(' ', String(recipe.ingredients).toLowerCase())).includes(i)
+            ))
+          ).map((recipe, index_recipe) => (
 
-            </StyledDialog>
-          </Dialog>
+            <Accordion key={index_recipe}>
+              <AccordionSummary
+                expandIcon={<ExpandMoreIcon />}
+                aria-controls="panel1a-content"
+                id="panel1a-header"
+              >
+                <Typography>{recipe.title}</Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Typography>
 
-          <Grid item xs={12}>
-            <CssTextField
-              fullWidth variant="outlined" size='small' placeholder={'Filter recipes (e.g. Thai, noodles, coconut milk, etc.)'} onInput={getSearchText} value={searchText}
-            />
-            {loadingRecipes && <StyledRecipeLoading>
-              <CircularProgress/>
-            </StyledRecipeLoading>}
-            {Object.keys(recipes).length > 0 && <StyledResultsSection>
-              {Object.values(recipes).sort(sortByTitle).filter(
-                recipe => (searchText.toLowerCase().replaceAll(',', '').split(' ').every(
-                  i => (recipe.title.toLowerCase().concat(' ', String(recipe.ingredients).toLowerCase())).includes(i)
-                ))
-              ).map((recipe, index_recipe) => (
+                  <StyledRecipeTopInfo>
+                    <div>
+                      {recipe.total_time && <StyledTotalTime>Total time: {recipe.total_time} minutes</StyledTotalTime>}
+                      <StyledRecipeLink><a target="_blank" rel="noreferrer" href={recipe.url}>Link to recipe's website</a></StyledRecipeLink>
+                    </div>
+                    <StyledDeleteRecipe>
+                      <Button variant="outlined" size="small" color="error" onClick={() => handleClickOpenDeleteRecipe(recipe.title)}>
+                        Delete recipe
+                      </Button>
+                      <Dialog open={openDeleteRecipe} onClose={handleCloseDeleteRecipe}>
+                        {uid !== 'default' && <div>
+                          <DialogContent>
+                            <DialogContentText id="alert-dialog-description">
+                              Are you sure you want to delete that recipe?
+                            </DialogContentText>
+                          </DialogContent>
+                          <DialogActions>
+                            <Button onClick={() => getDeleteRecipe(true)}>Yes</Button>
+                            <Button onClick={() => getDeleteRecipe(false)}>No</Button>
+                          </DialogActions>
+                        </div>}
+                        {uid === 'default' && <div>
+                          <DialogContent>
+                            <DialogContentText id="alert-dialog-description">
+                              <StyledLink to={{pathname: "/sign-up"}}>Create an account</StyledLink> to add your own recipes.
+                            </DialogContentText>
+                          </DialogContent>
+                        </div>}
+                      </Dialog>
+                    </StyledDeleteRecipe>
+                  </StyledRecipeTopInfo>
+                  <Hidden lgUp>
+                    <StyledImage>
+                        <StyledImageImg src={recipe.image} alt="new" height="auto"  />
+                    </StyledImage>
+                  </Hidden>
+                  <StyledRecipeInfo>
 
-                <Accordion key={index_recipe}>
-                  <AccordionSummary
-                    expandIcon={<ExpandMoreIcon />}
-                    aria-controls="panel1a-content"
-                    id="panel1a-header"
-                  >
-                    <Typography>{recipe.title}</Typography>
-                  </AccordionSummary>
-                  <AccordionDetails>
-                    <Typography>
-
-                      <StyledRecipeTopInfo>
+                    <StyledIngredientsSection>
+                      <div>
+                      {recipe.ingredients.map((ingredient, index_ingredient) => (
+                        <StyledIngredient key={index_ingredient}>{ingredient}</StyledIngredient>
+                      ))}
+                      </div>
+                    </StyledIngredientsSection>
+                    <Hidden mdUp>
+                      <hr style={{
+                        border: '0.5px solid rgba(0, 0, 0, 0.5)',
+                        margin: '40px auto',
+                        width: '40px'
+                      }}/>
+                    </Hidden>
+                    <StyledInstructionsSection>
+                      <div>
+                        {recipe.instructions.map((instruction, index_instruction) => (
+                          <StyledInstruction key={index_instruction}>{instruction}</StyledInstruction>
+                        ))}
+                      </div>
+                    </StyledInstructionsSection>
+                    <Hidden mdDown>
+                      <StyledImage>
                         <div>
-                          {recipe.total_time && <StyledTotalTime>Total time: {recipe.total_time} minutes</StyledTotalTime>}
-                          <StyledRecipeLink><a target="_blank" href={recipe.url}>Link to recipe's website</a></StyledRecipeLink>
+                          <StyledImageImg src={recipe.image} alt="new" height="auto" object-fit="cover" />
                         </div>
-                        <StyledDeleteRecipe>
-                          <Button variant="outlined" size="small" color="error" onClick={() => handleClickOpenDeleteRecipe(recipe.title)}>
-                            Delete recipe
-                          </Button>
-                          <Dialog open={openDeleteRecipe} onClose={handleCloseDeleteRecipe}>
-                            {uid !== 'default' && <div>
-                              <DialogContent>
-                                <DialogContentText id="alert-dialog-description">
-                                  Are you sure you want to delete that recipe?
-                                </DialogContentText>
-                              </DialogContent>
-                              <DialogActions>
-                                <Button onClick={() => getDeleteRecipe(true)}>Yes</Button>
-                                <Button onClick={() => getDeleteRecipe(false)}>No</Button>
-                              </DialogActions>
-                            </div>}
-                            {uid === 'default' && <div>
-                              <DialogContent>
-                                <DialogContentText id="alert-dialog-description">
-                                  <StyledLink to={{pathname: "/sign-up"}}>Create an account</StyledLink> to add your own recipes.
-                                </DialogContentText>
-                              </DialogContent>
-                            </div>}
-                          </Dialog>
-                        </StyledDeleteRecipe>
-                      </StyledRecipeTopInfo>
-                      <Hidden lgUp>
-                        <StyledImage>
-                            <StyledImageImg src={recipe.image} alt="new" height="auto"  />
-                        </StyledImage>
-                      </Hidden>
-                      <StyledRecipeInfo>
+                      </StyledImage>
+                    </Hidden>
+                  </StyledRecipeInfo>
+                </Typography>
+              </AccordionDetails>
+            </Accordion>
 
-                        <StyledIngredientsSection>
-                          <div>
-                          {recipe.ingredients.map((ingredient, index_ingredient) => (
-                            <StyledIngredient key={index_ingredient}>{ingredient}</StyledIngredient>
-                          ))}
-                          </div>
-                        </StyledIngredientsSection>
-                        <Hidden mdUp>
-                          <hr style={{
-                            border: '0.5px solid rgba(0, 0, 0, 0.5)',
-                            margin: '40px auto',
-                            width: '40px'
-                          }}/>
-                        </Hidden>
-                        <StyledInstructionsSection>
-                          <div>
-                            {recipe.instructions.map((instruction, index_instruction) => (
-                              <StyledInstruction key={index_instruction}>{instruction}</StyledInstruction>
-                            ))}
-                          </div>
-                        </StyledInstructionsSection>
-                        <Hidden mdDown>
-                          <StyledImage>
-                            <div>
-                              <StyledImageImg src={recipe.image} alt="new" height="auto" object-fit="cover" />
-                            </div>
-                          </StyledImage>
-                        </Hidden>
-                      </StyledRecipeInfo>
-                    </Typography>
-                  </AccordionDetails>
-                </Accordion>
+          ))}
+        </StyledResultsSection>}
 
-              ))}
-            </StyledResultsSection>}
-
-            <div style={{marginBottom: '30px'}}></div>
-          </Grid>
-        </Grid>
-    </StyledPage>
+        <div style={{marginBottom: '30px'}}></div>
+      </div>
+    </div>
   );
 }

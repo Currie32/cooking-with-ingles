@@ -1,12 +1,11 @@
-import React from 'react';
+import MenuIcon from '@mui/icons-material/Menu';
+import { useContext, useState } from "react";
 import { Link } from 'react-router-dom';
 import styled from "styled-components";
-import MenuIcon from '@mui/icons-material/Menu';
 
-import ButtonSignOut from './buttonSignOut';
 import * as ROUTES from '../../constants/routes';
-import { AuthUserContext } from '../Session';
-
+import { AuthContext } from "../../contexts/AuthContext";
+import { useLogout } from "../../hooks/useLogout";
 import img from './pattern.jpeg';
 
 
@@ -105,18 +104,17 @@ const HomeLink = styled(Link)`
   margin-top: 5px;
   text-align: center;
 `;
-
-
-export default function Navigation() {
-
-  return (
-    <AuthUserContext.Consumer>
-      {authUser =>
-        authUser ? <NavigationAuth /> : <NavigationNonAuth />
-      }
-    </AuthUserContext.Consumer>
-  )
-}
+const ButtonSignOut = styled.div`
+  font-size: 18px;
+  font-family: 'Lato';
+  text-decoration: none;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.9);
+  padding-top: 5px;
+  @media (max-width: 1050px) {
+    margin-top: 2px;
+  }
+`;
 
 
 function removeElement() {
@@ -129,7 +127,8 @@ function removeElement() {
 
 function NavigationAuth() {
 
-  const [menuDisplay, setMenuDisplay] = React.useState(false)
+  const [menuDisplay, setMenuDisplay] = useState(false)
+  const { logout } = useLogout();
 
   return (
     <div onMouseEnter={() => removeElement()}>
@@ -141,9 +140,10 @@ function NavigationAuth() {
       {menuDisplay && <ListOrdered>
         <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.HOME} onClick={() => setMenuDisplay(false)}>Home</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
         <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.SAVED} onClick={() => setMenuDisplay(false)}>Saved</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
+        <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.CREATE} onClick={() => setMenuDisplay(false)}>Create</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
         <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.COOKBOOKS} onClick={() => setMenuDisplay(false)}>Cookbooks</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
         <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.ACCOUNT} onClick={() => setMenuDisplay(false)}>Account</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
-        <ListItemVertical style={{paddingBottom: '20px'}}><StyledListItemVerticalShadow><ButtonSignOut onClick={() => setMenuDisplay(false)}/></StyledListItemVerticalShadow></ListItemVertical>
+        <ListItemVertical style={{paddingBottom: '20px'}}><StyledListItemVerticalShadow><ButtonSignOut onClick={() => {setMenuDisplay(false); logout()}}>Sign out</ButtonSignOut></StyledListItemVerticalShadow></ListItemVertical>
       </ListOrdered>}
     </div>}
     {window.innerWidth >= 1050 && <Navbar>
@@ -151,9 +151,10 @@ function NavigationAuth() {
         <ListItem><HomeLink to={ROUTES.HOME}>Cooking with Ingles</HomeLink></ListItem>
         <ListItem></ListItem>
         <ListItem><StyledLink to={ROUTES.SAVED}>Saved</StyledLink></ListItem>
+        <ListItem><StyledLink to={ROUTES.CREATE}>Create</StyledLink></ListItem>
         <ListItem><StyledLink to={ROUTES.COOKBOOKS}>Cookbooks</StyledLink></ListItem>
         <ListItem><StyledLink to={ROUTES.ACCOUNT}>Account</StyledLink></ListItem>
-        <ListItem><ButtonSignOut /></ListItem>
+        <ListItem><ButtonSignOut onClick={logout}>Sign out</ButtonSignOut></ListItem>
       </List>
     </Navbar>}
     </div>
@@ -162,7 +163,7 @@ function NavigationAuth() {
 
 function NavigationNonAuth() {
 
-  const [menuDisplay, setMenuDisplay] = React.useState(false)
+  const [menuDisplay, setMenuDisplay] = useState(false)
 
   return (
     <div onMouseEnter={() => removeElement()}>
@@ -174,6 +175,7 @@ function NavigationNonAuth() {
       {menuDisplay && <ListOrdered>
         <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.HOME} onClick={() => setMenuDisplay(false)}>Home</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
         <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.SAVED} onClick={() => setMenuDisplay(false)}>Saved</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
+        <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.CREATE} onClick={() => setMenuDisplay(false)}>Create</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
         <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.COOKBOOKS} onClick={() => setMenuDisplay(false)}>Cookbooks</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
         <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.LOG_IN} onClick={() => setMenuDisplay(false)}>Log In</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
         <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.SIGN_UP} onClick={() => setMenuDisplay(false)}>Sign Up</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
@@ -184,6 +186,7 @@ function NavigationNonAuth() {
         <ListItem><HomeLink to={ROUTES.HOME}>Cooking with Ingles</HomeLink></ListItem>
         <ListItem></ListItem>
         <ListItem><StyledLink to={ROUTES.SAVED}>Saved</StyledLink></ListItem>
+        <ListItem><StyledLink to={ROUTES.CREATE}>Create</StyledLink></ListItem>
         <ListItem><StyledLink to={ROUTES.COOKBOOKS}>Cookbooks</StyledLink></ListItem>
         <ListItem><StyledLink to={ROUTES.LOG_IN}>Log In</StyledLink></ListItem>
         <ListItem><StyledLink to={ROUTES.SIGN_UP}>Sign Up</StyledLink></ListItem>
@@ -191,4 +194,17 @@ function NavigationNonAuth() {
     </Navbar>}
     </div>
   )
+}
+
+
+export default function Navigation() {
+
+  const { user, authIsReady } = useContext(AuthContext);
+
+  if (!authIsReady) {
+    return null
+  }
+  else {
+   return user ? <NavigationAuth /> : <NavigationNonAuth />
+  }
 }
