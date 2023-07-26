@@ -1,26 +1,19 @@
-import React, { Component } from 'react';
-import firebase from 'firebase';
-import styled from 'styled-components'
-import { withRouter } from 'react-router-dom';
-import { compose } from 'react-recompose';
+import { getAnalytics, logEvent } from 'firebase/analytics';
+import { getAuth, createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
+import { doc, getFirestore, setDoc } from "firebase/firestore";
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import Button from '@material-ui/core/Button';
-import Grid from '@material-ui/core/Grid';
-import TextField from '@material-ui/core/TextField';
 import Checkbox from '@material-ui/core/Checkbox';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
-import { Link } from 'react-router-dom';
 import {withStyles} from '@material-ui/core/styles';
+import TextField from '@material-ui/core/TextField';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import styled from 'styled-components';
 
-import { withFirebase } from '../Firebase';
 import * as ROUTES from '../../constants/routes';
 
 
-const StyledPage = styled.div`
-  padding: 0px 25px;
-`;
-const StyledTextFields = styled.div`
-  padding-top: 100px;
-`;
 const StyledHeader = styled.h1`
   fontSize: 36px;
   text-align: center;
@@ -57,7 +50,6 @@ const StyledButton = styled.div`
 `;
 const StyledButtonCSS = withStyles((theme) => ({
   fontSize: '18px',
-  ['@media (max-width:600px)']: {fontSize: '16px'},
   root: {
     borderColor: 'rgba(79, 118, 226, 0.5)',
     backgroundColor: 'rgba(79, 118, 226, 0.1)',
@@ -70,6 +62,9 @@ const StyledButtonCSS = withStyles((theme) => ({
       backgroundColor: 'rgba(151, 172, 232, 0.5)',
       borderColor: 'rgba(151, 172, 232, 0.8)',
     }
+  },
+  [theme.breakpoints.down('sm')]: { // for screens smaller than 600px
+    fontSize: '16px',
   },
 }))(Button);
 const CssTextField = withStyles({
@@ -89,164 +84,131 @@ const CssTextField = withStyles({
   },
 })(TextField);
 
-
 function uploadDefaultRecipes({uid}) {
-  const addDefaultRecipes = firebase.functions().httpsCallable('add_default_recipes');
+  const functions = getFunctions();
+  const addDefaultRecipes = httpsCallable(functions, 'add_default_recipes');
   addDefaultRecipes({uid: uid}).catch(e => console.log(e))
 }
 
 
-const INITIAL_STATE = {
-  email: '',
-  password: '',
-  passwordConfirm: '',
-  error: null,
-  terms: false
-};
-
-class SignUpFormBase extends Component {
-  constructor(props) {
-    super(props);
-
-    this.state = { ...INITIAL_STATE}
-  }
-
-  onSubmit = event => {
-
-    firebase.analytics().logEvent("new_account")
-
-    const { email, password } = this.state;
-
-    this.props.firebase
-      .doCreateUserWithEmailAndPassword(email, password)
-      .then(authUser => {
-
-        this.setState({ ...INITIAL_STATE });
-        this.props.history.push(ROUTES.HOME);
-        var user = firebase.auth().currentUser;
-        uploadDefaultRecipes({uid: user.uid})
-        user.sendEmailVerification().then(function() {
-          // Email sent.
-        }).catch(function(error) {
-          // An error happened.
-        });
-
-        // Create a user in the Firebase database
-        return this.props.firebase
-          .user(authUser.user.uid)
-          .set({email});
-      })
-      .catch(error => {
-        this.setState({ error });
-      });
-
-    event.preventDefault();
-  }
-
-  onChangeEmail = event => {
-    this.setState({ email: event.target.value });
-  };
-  onChangePassword = event => {
-    this.setState({ password: event.target.value });
-  };
-  onChangePasswordConfirm = event => {
-    this.setState({ passwordConfirm: event.target.value });
-  };
-  onChangeTerms = event => {
-    const { terms } = this.state;
-    if (terms) {this.setState({terms: false})}
-    else {this.setState({terms: true})}
-  };
-
-  render() {
-    const {
-      email,
-      password,
-      passwordConfirm,
-      error,
-      terms,
-    } = this.state;
-
-    const isInvalid =
-      password !== passwordConfirm ||
-      password === '' ||
-      email === '' ||
-      !terms;
-
-    return (
-      <Grid container spacing={3}>
-        <Grid item xs={12}>
-          <form>
-            <StyledTextFields>
-              <StyledHeader>Sign Up.</StyledHeader>
-              <StyledTextField>
-                <CssTextField
-                  label="Email Address"
-                  autoComplete='email'
-                  onChange={this.onChangeEmail}
-                  variant="outlined"
-                  style={{width: '100%'}}
-                />
-              </StyledTextField>
-              <StyledTextField>
-                <CssTextField
-                  label="Password"
-                  autoComplete='password'
-                  type="password"
-                  onChange={this.onChangePassword}
-                  variant="outlined"
-                  style={{width: '100%'}}
-                />
-              </StyledTextField>
-              <StyledTextField>
-                <CssTextField
-                  label="Confirm Password"
-                  autoComplete='password'
-                  type="password"
-                  onChange={this.onChangePasswordConfirm}
-                  variant="outlined"
-                  style={{width: '100%'}}
-                />
-              </StyledTextField>
-              <StyledCheckbox>
-                <FormControlLabel
-                  control={<CheckboxTerms checked={terms} onChange={this.onChangeTerms} />}
-                />
-                <p>I agree to Cooking with Ingles' <Link to={{pathname: "/terms"}}>Terms of Use</Link></p>
-              </StyledCheckbox>
-            </StyledTextFields>
-            <StyledButton>
-              <StyledButtonCSS
-                disabled={isInvalid}
-                variant="outlined"
-                size="large"
-                style={{width: '100%', height: '55px'}}
-                onClick={this.onSubmit}
-              >
-                Sign Up
-              </StyledButtonCSS>
-            </StyledButton>
-            <StyledTextField>
-              {error && <p style={{margin: '-15px auto 50px'}}>{error.message}</p>}
-            </StyledTextField>
-          </form>
-        </Grid>
-      </Grid>
-    );
-  }
-}
-
-const SignUpForm = compose(
-  withRouter,
-  withFirebase,
-)(SignUpFormBase);
-
 export default function PageSignUp() {
+
+  const navigate = useNavigate();
+
+  const [email, setEmail] = useState('')
+  const getEmail = (event) => {setEmail(event.target.value)};
+  const [password, setPassword] = useState('')
+  const getPassword = (event) => {setPassword(event.target.value)};
+  const [passwordConfirm, setPasswordConfirm] = useState('')
+  const getPasswordConfirm = (event) => {setPasswordConfirm(event.target.value)};
+  const [terms, setTerms] = useState(false)
+  const getTerms = (event) => {
+    if (event.target.checked) {
+      setTerms(true)
+    }
+    else {
+      setTerms(false)
+    }
+  };
+  const [error, setError] = useState(null)
+
+  let isInvalid = (
+    email === '' ||
+    password === '' ||
+    password !== passwordConfirm ||
+    !terms
+  );
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    setError(null)
+
+    const analytics = getAnalytics();
+    logEvent(analytics, "new_account");
+
+    const auth = getAuth();
+    createUserWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        // Signed in 
+        const user = userCredential.user;
+
+        sendEmailVerification(user)
+          .then(() => {
+            // Email sent successfully
+          })
+          .catch(error => {
+            // An error happened while sending the email verification
+          });
+
+        // Create a user in the Firebase Firestore database        
+        const db = getFirestore()
+        setDoc(doc(db, 'users', user.uid), { email })
+          .then(() => {
+            // Document successfully written
+          })
+          .catch(error => {
+            // An error happened while writing the document
+          });
+
+        uploadDefaultRecipes({ uid: user.uid });
+        navigate(ROUTES.HOME)
+      })
+      .catch((error) => {
+        setError(error)
+      });
+  }
+  
+
   return (
-    <StyledPage>
-      <SignUpForm />
-    </StyledPage>
+    <div>
+      <StyledHeader>Sign Up.</StyledHeader>
+      <StyledTextField>
+        <CssTextField
+          label="Email Address"
+          autoComplete='email'
+          onChange={getEmail}
+          variant="outlined"
+          style={{width: '100%'}}
+        />
+      </StyledTextField>
+      <StyledTextField>
+        <CssTextField
+          label="Password"
+          autoComplete='password'
+          type="password"
+          onChange={getPassword}
+          variant="outlined"
+          style={{width: '100%'}}
+        />
+      </StyledTextField>
+      <StyledTextField>
+        <CssTextField
+          label="Confirm Password"
+          autoComplete='password'
+          type="password"
+          onChange={getPasswordConfirm}
+          variant="outlined"
+          style={{width: '100%'}}
+        />
+      </StyledTextField>
+      <StyledCheckbox>
+        <FormControlLabel control={<CheckboxTerms checked={terms} onChange={getTerms} />}/>
+          <p>I agree to Cooking with Ingles' <Link to={{pathname: "/terms"}}>Terms of Use</Link></p>
+      </StyledCheckbox>
+      <StyledButton>
+        <StyledButtonCSS
+          disabled={isInvalid}
+          variant="outlined"
+          size="large"
+          style={{width: '100%', height: '55px'}}
+          onClick={onSubmit}
+        >
+          Sign Up
+        </StyledButtonCSS>
+      </StyledButton>
+      <StyledTextField>
+        {error && <p style={{margin: '-15px auto 50px'}}>{error.message}</p>}
+      </StyledTextField>
+    </div>
   )
 }
-
-export { SignUpForm };

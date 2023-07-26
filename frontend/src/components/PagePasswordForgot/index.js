@@ -1,9 +1,9 @@
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, sendPasswordResetEmail } from 'firebase/auth';
 import Button from '@material-ui/core/Button';
 import {withStyles} from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
 import * as ROUTES from '../../constants/routes';
@@ -12,7 +12,7 @@ import * as ROUTES from '../../constants/routes';
 const StyledHeader = styled.h1`
   fontSize: 36px;
   text-align: center;
-  margin-bottom: 30px;
+  margin: 130px auto 30px;
 `;
 const StyledTextField = styled.div`
   display: flex;
@@ -22,7 +22,7 @@ const StyledTextField = styled.div`
   max-width: 600px;
 `;
 const StyledButton = styled.div`
-  margin: 15px auto 30px;
+  margin: 15px auto 50px;
   max-width: 600px;
   height: 50px;
   display: flex;
@@ -48,49 +48,32 @@ const StyledButtonCSS = withStyles((theme) => ({
     fontSize: '16px',
   },
 }))(Button);
-const StyledTextPasswordForget = styled.p`
-  color: black;
-  text-decoration: none;
-  text-align: center;
+const StyledTextError = styled.p`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: -25px auto 50px;
+  max-width: 600px;
 `;
-const CssTextField = withStyles({
-  root: {
-    backgroundColor: 'white',
-    '& .MuiOutlinedInput-root': {
-      '& fieldset': {
-        border: '1px solid rgba(0, 0, 0, 0.2)',
-      },
-      '&:hover fieldset': {
-        border: '1px solid rgba(0, 0, 0, 0.3)',
-      },
-      '&.Mui-focused fieldset': {
-        border: '1px solid rgba(0, 0, 0, 0.5)',
-      },
-    },
-  },
-})(TextField);
 
 
-export default function PageLogIn() {
+export default function PagePasswordForgot() {
 
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('')
   const getEmail = (event) => {setEmail(event.target.value)};
-  const [password, setPassword] = useState('')
-  const getPassword = (event) => {setPassword(event.target.value)};
   const [error, setError] = useState(null)
 
-  const isInvalid = email === '' || password === '';
+  const isInvalid = email === '';
 
   const onSubmit = async (e) => {
     e.preventDefault();
   
     const auth = getAuth();
-    signInWithEmailAndPassword(auth, email, password)
+    sendPasswordResetEmail(auth, email)
       .then(() => {
-        // Signed in 
-        navigate(ROUTES.HOME)
+        navigate(ROUTES.LOG_IN)
       })
       .catch((error) => {
         setError(error)
@@ -99,22 +82,12 @@ export default function PageLogIn() {
 
   return (
     <div>
-      <StyledHeader>Log In.</StyledHeader>
+      <StyledHeader>Reset Password.</StyledHeader>
       <StyledTextField>
-        <CssTextField
+        <TextField
           label="Email Address"
           autoComplete='email'
           onChange={getEmail}
-          variant="outlined"
-          style={{width: '100%'}}
-        />
-      </StyledTextField>
-      <StyledTextField>
-        <CssTextField
-          label='Password'
-          type="password"
-          autoComplete='password'
-          onChange={getPassword}
           variant="outlined"
           style={{width: '100%'}}
         />
@@ -127,15 +100,14 @@ export default function PageLogIn() {
           style={{width: '100%', height: '55px'}}
           onClick={onSubmit}
         >
-          Log In
+          Reset My Password
         </StyledButtonCSS>
       </StyledButton>
-      <StyledTextField>
-        {error && <p>{error.message}</p>}
-      </StyledTextField>
-    <StyledTextPasswordForget>
-      <Link to={ROUTES.PASSWORD_FORGET} style={{color: '#0000EE'}}>Forgot Password?</Link>
-    </StyledTextPasswordForget>
-  </div>
+      {error &&
+        <StyledTextError>
+          <p>{error.message}</p>
+        </StyledTextError>
+      }
+    </div>
   )
 };

@@ -1,19 +1,18 @@
-import React from 'react';
-import firebase from 'firebase';
-import styled from 'styled-components'
-import Grid from '@material-ui/core/Grid';
-import CreatableSelect from "react-select";
-import Button from '@mui/material/Button';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import {withStyles} from '@material-ui/core/styles';
+import Button from '@mui/material/Button';
+import { useEffect, useState } from "react";
+import styled from 'styled-components'
+import CreatableSelect from "react-select";
 
-import { AuthUserContext } from '../Session';
+import DeleteAccount from './deleteAccount';
 import PasswordChangeForm from './passwordChange';
 import cookbooks from '../../constants/cookbooks.json';
 
 
-const StyledPage = styled.div`
-  min-height: 580px;
-  margin: 100px 20px 0px;
+const Content = styled.div`
+  margin: auto;
+  max-width: 600px;
 `;
 const StyledMenu = styled.div`
   width: 600px;
@@ -53,7 +52,6 @@ const menuStyles = {
 }
 const StyledButtonSaveCookbooks = withStyles((theme) => ({
   fontSize: '18px',
-  ['@media (max-width:600px)']: {fontSize: '16px'},
   root: {
     borderColor: 'rgba(79, 118, 226, 0.5)',
     backgroundColor: 'rgba(79, 118, 226, 0.1)',
@@ -66,6 +64,9 @@ const StyledButtonSaveCookbooks = withStyles((theme) => ({
       backgroundColor: 'rgba(151, 172, 232, 0.5)',
       borderColor: 'rgba(151, 172, 232, 0.8)',
     }
+  },
+  [theme.breakpoints.down('sm')]: { // For screens smaller than 600px
+    fontSize: '16px',
   },
 }))(Button);
 const StyledButton = styled.div`
@@ -83,25 +84,18 @@ const StyledRequest = styled.p`
 `;
 
 
-function PageAccount({uid, userCookbooks, getUserCookbooks}) {
+export default function PageAccount({uid, userCookbooks, getUserCookbooks}) {
 
-  const [accountOption, setAccountOption] = React.useState(0)
-  const getAccountOption = (event, option) => {setAccountOption(option)}
+  const functions = getFunctions();
 
-  let urlParams = new URLSearchParams(window.location.search);
-
-  const [saveCookbooks, setSaveCookbooks] = React.useState(false)
-  const [loadingSaveCookbooks, setLoadingSaveCookbooks] = React.useState(false)
-  const handleSaveCookbooks = () => {
-    setSaveCookbooks(true);
-    setLoadingSaveCookbooks(true)
-  }
-  React.useEffect(() => {
+  const [saveCookbooks, setSaveCookbooks] = useState(false)
+  const [loadingSaveCookbooks, setLoadingSaveCookbooks] = useState(false)
+  useEffect(() => {
     async function fetchData() {
       if (saveCookbooks && uid !== "default" && false) {
-        const saveUserCookbooks = firebase.functions().httpsCallable('save_user_cookbooks');
+        const saveUserCookbooks = httpsCallable(functions, 'save_user_cookbooks');
         await saveUserCookbooks({cookbooks: cookbooks, uid: uid}).then(response => {
-          loadingSaveCookbooks(false)
+          setLoadingSaveCookbooks(false)
           setSaveCookbooks(false)
         })
       }
@@ -109,7 +103,7 @@ function PageAccount({uid, userCookbooks, getUserCookbooks}) {
     fetchData()
   }, [saveCookbooks])
 
-  const saveUserCookbooks = firebase.functions().httpsCallable('save_user_cookbooks');
+  const saveUserCookbooks = httpsCallable(functions, 'save_user_cookbooks');
   const sendUserCookbooks = () => {
     saveUserCookbooks({
         cookbooks: userCookbooks,
@@ -120,42 +114,31 @@ function PageAccount({uid, userCookbooks, getUserCookbooks}) {
   }
 
   return (
-    <AuthUserContext.Consumer>
-      {authUser => (
-        <Grid container spacing={3}>
-          <Grid item xs={12}>
-            <StyledPage>
-              <StyledMenu>
-                <h2 style={{marginBottom: '30px', textAlign: 'center'}}>My cookbooks</h2>
-                <CreatableSelect
-                  isMulti
-                  options={cookbooks}
-                  onChange={getUserCookbooks}
-                  value={userCookbooks?.length > 0 ? userCookbooks.map(v => {return ({label: v, value: v})}) : []}
-                  placeholder={'Choose cookbooks that you own'}
-                  styles={menuStyles}
-                />
-              </StyledMenu>
-              <StyledButton>
-                <StyledButtonSaveCookbooks
-                  variant="outlined" onClick={sendUserCookbooks} size="large"
-                  style={{width: '100%', height: '55px'}}
-                >
-                  Save cookbooks
-                </StyledButtonSaveCookbooks>
-              </StyledButton>
-              <StyledRequest>
-                Can't find one of your cookbooks? Request it to be added by <a target="_blank" href="https://docs.google.com/forms/d/e/1FAIpQLSfPveAlQDH0RIx0qWWmibA2nKxq7Rl7wIFn6j_Mysba1iZJlQ/viewform">clicking here.</a>
-              </StyledRequest>
-              <PasswordChangeForm />
-            </StyledPage>
-          </Grid>
-        </Grid>
-      )}
-    </AuthUserContext.Consumer>
+    <Content>
+      <StyledMenu>
+        <h2 style={{marginBottom: '30px', textAlign: 'center'}}>My cookbooks</h2>
+        <CreatableSelect
+          isMulti
+          options={cookbooks}
+          onChange={getUserCookbooks}
+          value={userCookbooks?.length > 0 ? userCookbooks.map(v => {return ({label: v, value: v})}) : []}
+          placeholder={'Choose cookbooks that you own'}
+          styles={menuStyles}
+        />
+      </StyledMenu>
+      <StyledButton>
+        <StyledButtonSaveCookbooks
+          variant="outlined" onClick={sendUserCookbooks} size="large"
+          style={{width: '100%', height: '55px'}}
+        >
+          Save cookbooks
+        </StyledButtonSaveCookbooks>
+      </StyledButton>
+      <StyledRequest>
+        Can't find one of your cookbooks? Request it to be added by <a target="_blank" rel="noreferrer" href="https://docs.google.com/forms/d/e/1FAIpQLSfPveAlQDH0RIx0qWWmibA2nKxq7Rl7wIFn6j_Mysba1iZJlQ/viewform">clicking here.</a>
+      </StyledRequest>
+      <PasswordChangeForm />
+      <DeleteAccount />
+    </Content>
   )
-};
-
-const condition = authUser => !!authUser;
-
-export default PageAccount;
+}
