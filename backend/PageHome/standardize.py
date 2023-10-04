@@ -48,7 +48,6 @@ def standardize_ingredient(ingredient):
 
     if ingredient != "sweet potato":
         ingredient = re.sub(r'(canned )|(ground )|(fresh )|(frozen )|(sweet )|( in oil)', '', ingredient)
-    # ingredient = re.sub(r"([a-z]+) mushroom[s]*", 'mushroom', ingredient)
     ingredient = re.sub(r"([a-z]+) noodle[s]*", 'noodles', ingredient)
     ingredient = re.sub(r"(light|dark) soy sauce", 'soy sauce', ingredient)
     ingredient = re.sub(r'( of your choice)', '', ingredient)
