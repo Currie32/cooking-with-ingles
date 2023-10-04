@@ -1,2 +1,2 @@
 firebase-admin==5.2.0
-recipe-scrapers==13.20.0
+Flask==2.3.2

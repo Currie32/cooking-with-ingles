@@ -1,4 +1,5 @@
 import { getAnalytics, logEvent } from "firebase/analytics";
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import {withStyles} from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';
@@ -128,6 +129,7 @@ const ButtonVariations = styledMUI(Button)({
 export default function PageCreate() {
 
   const analytics = getAnalytics()
+  const functions = getFunctions();
 
   const [loading, setLoading] = useState(false)
   const [title, setTitle] = useState('')
@@ -190,9 +192,11 @@ export default function PageCreate() {
       message_titles = message_titles + ". The recipe must be " + diet
     }
     
-    const response = await fetchChatCompletions(message_titles)
+    const createRecipeTitles = httpsCallable(functions, 'create_recipe');
+    const response = await createRecipeTitles({recipe_description: message_titles})
+
     try {
-      const data = await response.json();
+      const data = await response['data'];
       return data;
     }
     catch (error) {
@@ -206,8 +210,8 @@ export default function PageCreate() {
     setRecipeVariations(false)
     const response = await fetchRecipeTitles();
     setLoading(false)
-    setRecipeTitles(response.choices[0].message.content)
-    window.localStorage.setItem('recipeTitles', JSON.stringify(response.choices[0].message.content))
+    setRecipeTitles(response)
+    window.localStorage.setItem('recipeTitles', JSON.stringify(response))
     window.localStorage.setItem('recipe', JSON.stringify(''))
     window.localStorage.setItem('recipeUnparsed', JSON.stringify(''))
     window.localStorage.setItem('recipeVariations', JSON.stringify(''))
@@ -227,9 +231,10 @@ export default function PageCreate() {
     message_recipe = message_recipe + "\n(Use grams instead of ounces)"
     message_recipe = message_recipe + "\n(Check that the cooking time is correct and adjust it to be accurate)"
     
-    const response = await fetchChatCompletions(message_recipe)
+    const createRecipeFullRecipe = httpsCallable(functions, 'create_recipe');
+    const response = await createRecipeFullRecipe({recipe_description: message_recipe})
     try {
-      const data = await response.json();
+      const data = await response['data'];
       return data;
     }
     catch (error) {
@@ -242,17 +247,17 @@ export default function PageCreate() {
     setLoading(true)
     const response = await fetchRecipe(recipeTitle);
     setLoading(false)
-    setRecipe(parseRecipe(response.choices[0].message.content))
-    setRecipeUnparsed(response.choices[0].message.content)
-    window.localStorage.setItem('recipe', JSON.stringify(parseRecipe(response.choices[0].message.content)))
-    window.localStorage.setItem('recipeUnparsed', JSON.stringify(response.choices[0].message.content))
+    setRecipe(parseRecipe(response))
+    setRecipeUnparsed(response)
+    window.localStorage.setItem('recipe', JSON.stringify(parseRecipe(response)))
+    window.localStorage.setItem('recipeUnparsed', JSON.stringify(response))
     window.localStorage.setItem('recipeVariations', JSON.stringify(''))
   }
 
 
   const [recipeVariations, setRecipeVariations] = useState(false)
   const [recipeVariationsError, setRecipeVariationsError] = useState(false)
-  async function fetchRecipeVariations(recipeTitle) {
+  async function fetchRecipeVariations() {
     
     let message_recipe = "What are some variations for this recipe:\n" + recipeUnparsed
     message_recipe = message_recipe + "\nUse the format:\n<type-of-variation>: <description-of-variation>s"
@@ -260,9 +265,10 @@ export default function PageCreate() {
     message_recipe = message_recipe + "\nSpicy Slaw: Add a kick of heat to the slaw by stirring in some sriracha or chili garlic sauce to taste. Adjust the spiciness according to your preference."
     message_recipe = message_recipe + "\nBaja Shrimp Tacos: Swap out the white fish for peeled and deveined shrimp. Marinate the shrimp in a mixture of lime juice, garlic, chili powder, and olive oil for 15 minutes before cooking. Sauté the shrimp in a hot skillet until pink and cooked through, then assemble the tacos as usual."
     
-    const response = await fetchChatCompletions(message_recipe)
+    const createRecipeVariations = httpsCallable(functions, 'create_recipe');
+    const response = await createRecipeVariations({recipe_description: message_recipe})
     try {
-      const data = await response.json();
+      const data = await response['data'];
       return data;
     }
     catch (error) {
@@ -275,7 +281,7 @@ export default function PageCreate() {
     setLoading(true)
     const response = await fetchRecipeVariations();
     setLoading(false)
-    const reponseParsed = parseVariations(response.choices[0].message.content)
+    const reponseParsed = parseVariations(response)
     setRecipeVariations(reponseParsed)
     window.localStorage.setItem('recipeVariations', JSON.stringify(reponseParsed))
   }

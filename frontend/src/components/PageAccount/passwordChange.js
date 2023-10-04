@@ -95,7 +95,7 @@ export default function PasswordChangeForm() {
           type="password"
           onChange={getPassword}
           variant="outlined"
-          style={{width: '100%'}}
+          style={{width: '100%', zIndex: '0'}}
         />
       </StyledTextField>
       <StyledTextField>
@@ -105,7 +105,7 @@ export default function PasswordChangeForm() {
           type="password"
           onChange={getPasswordConfirm}
           variant="outlined"
-          style={{width: '100%'}}
+          style={{width: '100%', zIndex: '0'}}
         />
       </StyledTextField>
       <StyledButton>

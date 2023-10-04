@@ -2,6 +2,7 @@ import json
 import logging
 
 from firebase_admin import credentials, firestore, initialize_app
+from flask import Flask
 from recipe_scrapers import scrape_me
 
 # Use certificate to connect to database
@@ -9,75 +10,51 @@ cred = credentials.Certificate('./serviceAccountKey.json')
 initialize_app(cred)
 db = firestore.client()
 
+app = Flask(__name__)
+
 logger = logging.getLogger()
+logging.basicConfig(level=logging.INFO)
 
 
+@app.route('/read-recipes', methods=['GET', 'OPTIONS'])
 def read_recipes(request):
     if request.method == 'OPTIONS':
-        headers = {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET',
-            'Access-Control-Allow-Headers': ['*', 'Content-Type', 'Authorization'],
-            'Access-Control-Max-Age': '3600'
-        }
-        return (json.dumps(['']), 204, headers)
+        return handle_options_request('GET')
 
     request_parsed = request.get_json()
     logger.info(request_parsed)
     uid = request_parsed['data']['uid']
 
     data = db.collection('users').document(uid).get().to_dict()
-
     data = eval(str(data).replace('\\\\u00bd', '1/2').replace('\\\\u00bc', '1/4'))
 
-    # Need the key "data" in the return object
     response = json.dumps({'data': data})
-
     headers = {'Access-Control-Allow-Origin': '*'}
-
     return (response, 200, headers)
 
 
+@app.route('/add-recipe', methods=['OPTIONS', 'POST'])
 def add_recipe(request):
     if request.method == 'OPTIONS':
-        headers = {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET',
-            'Access-Control-Allow-Headers': ['*', 'Content-Type', 'Authorization'],
-            'Access-Control-Max-Age': '3600'
-        }
-        return (json.dumps(['']), 204, headers)
+        return handle_options_request('POST')
 
     request_parsed = request.get_json()
     logger.info(request_parsed)
     url = request_parsed['data']['url']
     uid = request_parsed['data']['uid']
 
-    data = db.collection('users').document(uid).get().to_dict()
+    user_recipes = db.collection('users').document(uid).get().to_dict()
 
     success = True
 
     try:
         scraper = scrape_me(url, wild_mode=True)
-
         title = scraper.title()
+        cuisine = scraper.cuisine() if scraper.cuisine() else None
+        nutrients = scraper.nutrients() if scraper.nutrients() else None
+        total_time = scraper.total_time() if scraper.total_time() else None
 
-        try:
-            cuisine = scraper.cuisine()
-        except:
-            cuisine = False
-
-        try:
-            nutrients = scraper.nutrients()
-        except:
-            nutrients = False
-
-        try:
-            total_time = scraper.total_time()
-        except:
-            total_time = False
-
-        data[title] = {
+        user_recipes[title] = {
             "cuisine": cuisine,
             "title": title,
             "ingredients": scraper.ingredients(),
@@ -88,30 +65,25 @@ def add_recipe(request):
             "url": scraper.canonical_url()
         }
         doc_ref = db.collection('users').document(uid)
-        doc_ref.set(data)
+        doc_ref.set(user_recipes)
     except:
         success = False
 
-    # Need the key "data" in the return object
     response = json.dumps({'data': {
-        'recipes': data,
+        'recipes': user_recipes,
         'success': success
     }})
-
     headers = {'Access-Control-Allow-Origin': '*'}
-
     return (response, 200, headers)
 
 
+@app.route('/delete_recipe', methods=['OPTIONS', 'POST'])
 def delete_recipe(request):
+    """
+    Remove a recipe from the user's data by uploading all by the recipe to be deleted.
+    """
     if request.method == 'OPTIONS':
-        headers = {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET',
-            'Access-Control-Allow-Headers': ['*', 'Content-Type', 'Authorization'],
-            'Access-Control-Max-Age': '3600'
-        }
-        return (json.dumps(['']), 204, headers)
+        return handle_options_request('POST')
 
     request_parsed = request.get_json()
     logger.info(request_parsed)
@@ -121,9 +93,16 @@ def delete_recipe(request):
     doc_ref = db.collection('users').document(uid)
     doc_ref.set(recipes)
 
-    # Need the key "data" in the return object
     response = json.dumps({'data': 'success'})
-
     headers = {'Access-Control-Allow-Origin': '*'}
-
     return (response, 200, headers)
+
+
+def handle_options_request(method):
+    cors_headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': f'OPTIONS, {method}',
+        'Access-Control-Allow-Headers': ['*', 'Content-Type', 'Authorization'],
+        'Access-Control-Max-Age': '3600'
+    }
+    return (json.dumps(['']), 204, cors_headers)
