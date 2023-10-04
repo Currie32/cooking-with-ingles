@@ -2,7 +2,7 @@ import { signOut } from "firebase/auth";
 import { useContext } from "react";
 
 import { AuthContext } from "../contexts/AuthContext";
-import { auth } from "../firebase/config";
+import { auth } from "../Firebase/config";
 
 
 export const useLogout = () => {

@@ -46,7 +46,7 @@ const menuStyles = {
     return {
       ...defaultStyles,
       color: "rgba(0, 0, 0, 0.35)",
-      fontSize: "15px"
+      fontSize: "15px",
     }
   }
 }
