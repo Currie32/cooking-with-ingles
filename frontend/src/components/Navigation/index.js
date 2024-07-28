@@ -39,7 +39,8 @@ const StyledMenuIcon = styled.div`
 `;
 const StyledHomeLink = styled.div`
   background-color: rgba(0, 0, 0, 0.8);
-  padding: 2px 20px 5px;
+  border-radius: 5px;
+  padding: 2px 20px 7px;
   width: fit-content;
   margin: -35px auto;
   display: flex;
@@ -59,6 +60,7 @@ const ListOrdered = styled.div`
 `;
 const List = styled.ul`
   background-color: rgba(0, 0, 0, 0.8);
+  border-radius: 0px 5px 5px 0px;
   overflow-x: auto;
   display: flex;
   justify-content: left;

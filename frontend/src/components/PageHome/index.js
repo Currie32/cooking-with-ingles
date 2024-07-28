@@ -4,38 +4,31 @@ import Grid from '@material-ui/core/Grid';
 import {withStyles} from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';
 import Tooltip from '@material-ui/core/Tooltip';
+import CancelIcon from '@mui/icons-material/Cancel';
+import KeyboardReturnIcon from '@mui/icons-material/KeyboardReturn';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import Autocomplete from '@mui/material/Autocomplete';
+import Box from '@mui/material/Box';
 import Checkbox from '@mui/material/Checkbox';
+import Chip from '@mui/material/Chip';
 import Typography from '@mui/material/Typography';
 import { Fragment, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import styled from 'styled-components';
+import Button from '@mui/material/Button';
+
+import options from './searchTerms.json';
 
 
 const Content = styled.div`
   margin: auto;
   max-width: 700px;
 `;
-const CssTextField = withStyles({
-  root: {
-    backgroundColor: 'white',
-    margin: '0px 0px 0px',
-    '& .MuiOutlinedInput-root': {
-      '& fieldset': {
-        border: '1px solid rgba(0, 0, 0, 0.2)',
-      },
-      '&:hover fieldset': {
-        border: '1px solid rgba(0, 0, 0, 0.3)',
-      },
-      '&.Mui-focused fieldset': {
-        border: '1px solid rgba(0, 0, 0, 0.5)',
-      },
-    },
-  },
-})(TextField);
-const StyledTooltipExample = styled.div`
-  font-size: 14px;
-  padding: 0px 0px 5px;
+const StyledSearchBox = styled.div`
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 15px auto 0px;
 `;
 const StyledCheckbox = styled.div`
     display: flex;
@@ -70,25 +63,6 @@ const StyledRecipeSection = styled.div`
     background-size: 100% 40px, 100% 40px, 100% 14px, 100% 14px;
     /* Opera doesn't support this in the shorthand */
     background-attachment: local, local, scroll, scroll;
-`;
-const StyledCoIngredients = styled.div`
-    margin: 0px auto 35px;
-    font-size: 16px;
-    font-style: italic;
-    color: rgb(70, 70, 70);
-`;
-const StyledCoIngredientsHeader = styled.div`
-    font-size: 17px;
-    font-style: normal;
-    display: flex;
-    margin-bottom: 12px;
-    color: rgb(0, 0, 0);
-`;
-const StyledCoIngredientsSearchText = styled.div`
-    color: rgb(58, 60, 123);
-    font-weight: 600;
-    margin: -1px 0px 0px 10px;
-    font-size: 17px;
 `;
 const StyledRecipe = styled.div`
   margin: 0px auto 35px;
@@ -133,6 +107,20 @@ const StyledNoRecipes = styled.div`
     font-size: 17px;
 `;
 
+const mapTermsToGroups = (terms) => {
+  return terms.reduce((groupedTerms, currentTerm) => {
+    const groupKey = currentTerm.group.toLowerCase(); // Convert group name to lowercase for consistency
+
+    if (!groupedTerms[groupKey]) {
+      groupedTerms[groupKey] = []; // Initialize the group array if it doesn't exist
+    }
+
+    groupedTerms[groupKey].push(currentTerm.name); // Add the item name to the group array
+
+    return groupedTerms; // Return the updated groupedItems object
+  }, {});
+};
+
 
 export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
 
@@ -141,107 +129,148 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
   const [checked, setChecked] = useState(false);
   const getChecked = (event) => {
     setChecked(event.target.checked);
-    setResponseSearch({recipes: [], query: ''})
     setRecipes(false)
-    setCoIngredients(false)
     setLoadingSearch(true)
     window.localStorage.setItem('searchCheckedHome', JSON.stringify(event.target.value))
   };
 
   const [loadingSearch, setLoadingSearch] = useState(false)
   const [recipes, setRecipes] = useState(false)
-  const [coIngredients, setCoIngredients] = useState(false)
-  const [searchText, setSearchText] = useState('')
-  const getSearchText = (e) => {
-    setRecipes(false)
-    setCoIngredients(false)
-    if (!e) {setSearchText(''); setLoadingSearch(false)}
-    else if (e.target.value === '') {
-      setSearchText('');
-      setLoadingSearch(false)
-      window.localStorage.setItem('searchTextHome', JSON.stringify(e.target.value))
-      window.localStorage.setItem('recipesHome', JSON.stringify(false))
+  const [getRecipesClicked, setGetRecipesClicked] = useState(false)
+  const getRecipes = () => {
+    setGetRecipesClicked(true)
+    setLoadingSearch(true)
+  }
+  const [searchTerms, setSearchTerms] = useState([])
+  const [searchOptions, setSearchOptions] = useState([])
+  const getSearchTerms = (terms) => {
+    console.log(terms)
+    if (!terms) {
+      setSearchTerms({})
+      setSearchOptions([])
+      window.localStorage.setItem('searchTermsHome', JSON.stringify({}))
+      window.localStorage.setItem('searchOptionsHome', JSON.stringify([]))
     }
     else {
-        setLoadingSearch(true);
-        setSearchText(e.target.value);
-        window.localStorage.setItem('searchTextHome', JSON.stringify(e.target.value))
+      const searchTermsNew = mapTermsToGroups(terms);
+      const searchOptionsNew = terms.map(term => term.name)
+      setSearchTerms(searchTermsNew);
+      setSearchOptions(searchOptionsNew)
+      window.localStorage.setItem('searchTermsHome', JSON.stringify(searchTermsNew))
+      window.localStorage.setItem('searchOptionsHome', JSON.stringify(searchOptionsNew))
     }
   }
-  const [searchTextDelayed, setSearchTextDelayed] = useState('')
-  useEffect(() => {
-    setTimeout(() => {setSearchTextDelayed(searchText)}, 500)
-  }, [searchText])
 
-  const [responseSearch, setResponseSearch] = useState({recipes: [], query: ''})
   useEffect(() => {
-    if (searchText === searchTextDelayed && searchText !== '') {
+    setRecipes(false)
+    console.log(searchTerms)
+    if (searchTerms && getRecipesClicked) {
+      setGetRecipesClicked(false)
       async function getData() {
-        const getRecipes = httpsCallable(functions, 'get_recipes');
+        const getRecipesV2 = httpsCallable(functions, 'get_recipes_v2');
         if (checked) {
-            const response = await getRecipes(
-                {ingredients: searchText, userCookbooks: userCookbooks}
-            ).then(response => response.data)
-            setResponseSearch(response)
+            const response = await getRecipesV2(
+                {searchTerms: searchTerms, userCookbooks: userCookbooks}
+            ).then(response => response.data.recipes)
+            setRecipes(response)
+            window.localStorage.setItem('recipesHome', JSON.stringify(response))
+            setLoadingSearch(false)
         }
         else {
-            const response = await getRecipes(
-                {ingredients: searchText, userCookbooks: []}
-            ).then(response => response.data)
-            setResponseSearch(response)
+            const response = await getRecipesV2(
+                {searchTerms: searchTerms, userCookbooks: []}
+            ).then(response => response.data.recipes)
+            setRecipes(response)
+            window.localStorage.setItem('recipesHome', JSON.stringify(response))
+            setLoadingSearch(false)
         }
       }
       getData()
     }
-  }, [searchTextDelayed, checked])
-
-  useEffect(() => {
-    if (searchText && searchText?.toLowerCase() === responseSearch?.query?.toLowerCase()) {
-      setRecipes(responseSearch.recipes)
-      setCoIngredients(responseSearch.co_ingredients)
-      setLoadingSearch(false)
-      window.localStorage.setItem('recipesHome', JSON.stringify(responseSearch.recipes))
-      window.localStorage.setItem('coIngredientsHome', JSON.stringify(responseSearch.co_ingredients))
-    }
-  }, [responseSearch?.query])
+  }, [getRecipesClicked])
 
   useEffect(() => {
     if (uid === "default") {setChecked(false)}
   }, [uid])
 
   useEffect(() => {
-    const storedSearchText = window.localStorage.getItem('searchTextHome');
+    const storedSearchTerms = window.localStorage.getItem('searchTermsHome');
+    const storedSearchOptions = window.localStorage.getItem('searchOptionsHome');
     const storedRecipes = window.localStorage.getItem('recipesHome');
-    const storedCoIngredients = window.localStorage.getItem('coIngredientsHome');
     const storedChecked = window.localStorage.getItem('searchCheckedHome');
-    if ( storedSearchText !== null ) setSearchText(JSON.parse(storedSearchText));
+    if ( storedSearchTerms !== null ) setSearchTerms(JSON.parse(storedSearchTerms));
+    if ( storedSearchOptions !== null ) setSearchOptions(JSON.parse(storedSearchOptions));
     if ( storedRecipes !== null ) setRecipes(JSON.parse(storedRecipes));
-    if ( storedCoIngredients !== null ) setCoIngredients(JSON.parse(storedCoIngredients));
     if ( storedChecked !== null ) setChecked(JSON.parse(storedChecked));
   }, []);
+  
+  const renderGroup = (params) => [
+    <li key={params.key} style={{ color: 'rgba(79, 118, 226, 1)', fontWeight: 'bold', fontSize: '1.1em', marginLeft: '15px' }}>
+      <Typography variant="subtitle1">{params.group}</Typography>
+    </li>,
+    params.children,
+  ];
+
+  const renderTags = (value, getTagProps) => 
+    value.map((option, index) => (
+      <Chip
+        {...getTagProps({ index })}
+        label={option.name}
+        style={{
+          backgroundColor: 'white',
+          border: '1px solid rgb(58, 60, 123)',
+          color: 'rgb(58, 60, 123)',
+          // Change background color on hover
+          '&:hover': {
+            backgroundColor: 'rgba(58, 60, 123, 0.5)',
+          },
+        }}
+        deleteIcon={<CancelIcon style={{ color: 'rgb(58, 60, 123)' }} />}
+      />
+    ));
 
   return (
     <Content>
-      <Tooltip title={
-        <Fragment>
-          <Typography>Example searches:</Typography>
-          <StyledTooltipExample>• Vegetarian pasta</StyledTooltipExample>
-          <StyledTooltipExample>• Chocolate dessert</StyledTooltipExample>
-          <StyledTooltipExample>• "Tomato breakfast"</StyledTooltipExample>
-          <StyledTooltipExample>• "Vietnamese" salad</StyledTooltipExample>
-          <StyledTooltipExample>• Easy lunch</StyledTooltipExample>
-        </Fragment>
-      }>
-        <InfoOutlinedIcon style={{margin: '30px 0px 2px', float: 'right', fontSize: '16px'}}/>
-      </Tooltip>
-      <CssTextField
-          fullWidth
-          variant="outlined"
-          size='small'
-          placeholder={'Search for recipes in cookbooks (e.g. pasta, tomatoes, cheese, etc.)'}
-          onInput={getSearchText}
-          value={searchText}
-      />
+      <StyledSearchBox>
+        <Autocomplete
+          multiple
+          id="tags-standard"
+          openOnFocus={true}
+          autoHighlight={true}
+          options={options.filter(option => !searchOptions.includes(option.name))}
+          groupBy={(option) => option.group}
+          getOptionLabel={(option) => option.name}
+          renderGroup={renderGroup}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              variant="standard"
+              label="Search for recipes"
+              InputProps={{
+                ...params.InputProps,
+                endAdornment: (
+                  <Fragment>
+                    {params.InputProps.endAdornment}
+                  </Fragment>
+                ),
+              }}
+            />
+          )}
+          renderOption={(props, option) => (
+            <Box component="li" {...props}>
+              <span style={{ marginLeft: "10px"}}>{option.name}</span>
+            </Box>
+          )}
+          renderTags={renderTags}
+          // Set width to 600px
+          sx={{ width: "100%", marginRight: "15px" }}
+          value={searchOptions.map((option) => options.find((o) => o.name === option))}
+          onChange={(event, value) => getSearchTerms(value.map((option) => option))}
+        />
+        <Button variant="contained" color="primary" sx={{height: "50px", width: "40px", backgroundColor: "rgb(59, 61, 123)"}} onClick={getRecipes}>
+          <KeyboardReturnIcon/>
+        </Button>
+      </StyledSearchBox>
       <StyledCheckbox>
           {uid !== "default" && <Checkbox
               checked={checked} onChange={getChecked} inputProps={{ 'aria-label': 'controlled' }} 
@@ -262,13 +291,6 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
       {loadingSearch && <Grid item xs={12} style={{justifyContent: 'center', display: 'flex', marginTop: '100px'}}>
           <CircularProgress/>
       </Grid>}
-
-      {coIngredients?.length > 0 && <StyledCoIngredients>
-          <StyledCoIngredientsHeader>
-              These ingredients are commonly used with: <StyledCoIngredientsSearchText>{searchText}</StyledCoIngredientsSearchText>
-          </StyledCoIngredientsHeader>
-          {coIngredients.join(', ')}
-      </StyledCoIngredients>}
 
       {recipes?.length > 0 && <StyledRecipeSection>
           
