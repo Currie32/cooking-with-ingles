@@ -1,16 +1,15 @@
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Grid from '@material-ui/core/Grid';
-import {withStyles} from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';
 import Tooltip from '@material-ui/core/Tooltip';
 import CancelIcon from '@mui/icons-material/Cancel';
 import KeyboardReturnIcon from '@mui/icons-material/KeyboardReturn';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import Autocomplete from '@mui/material/Autocomplete';
 import Box from '@mui/material/Box';
 import Checkbox from '@mui/material/Checkbox';
 import Chip from '@mui/material/Chip';
+import {Dialog} from '@mui/material';
 import Typography from '@mui/material/Typography';
 import { Fragment, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
@@ -65,6 +64,9 @@ const StyledRecipeSection = styled.div`
     background-attachment: local, local, scroll, scroll;
 `;
 const StyledRecipe = styled.div`
+  border: 1px solid rgba(59, 61, 123, 0.2);
+  border-radius: 10px;
+  padding: 10px;
   margin: 0px auto 35px;
 `;
 const StyledRecipeName = styled.div`
@@ -100,12 +102,27 @@ const StyledIngredientsAndCategoriesTitle = styled.div`
     margin-right: 20px;
     color: rgb(0, 0, 0);
 `;
+const StyledGeneratedRecipeIngredientsAndInstructions = styled.div`
+  display: flex;
+  @media (max-width: 599px) {display: block}
+`;
 const StyledNoRecipes = styled.div`
     margin-top: 60px;
     text-align: center;
     font-style: italic;
     font-size: 17px;
 `;
+const StyledGeneratedRecipeTitle = styled.h1`
+  color: rgb(59, 61, 123);
+  margin: 15px 20px;
+`
+const StyledGeneratedRecipeSubTitle = styled.h2`
+  color: rgb(59, 61, 123);
+  margin: 15px 0px;
+`
+const StyledGeneratedRecipeInfo = styled.div`
+  margin: 5px 20px;
+`
 
 const mapTermsToGroups = (terms) => {
   return terms.reduce((groupedTerms, currentTerm) => {
@@ -127,24 +144,30 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
   const functions = getFunctions();
 
   const [checked, setChecked] = useState(false);
+  const [loadingSearch, setLoadingSearch] = useState(false);
+  const [recipes, setRecipes] = useState(false);
+  const [getRecipesClicked, setGetRecipesClicked] = useState(false);
+  const [searchTerms, setSearchTerms] = useState({});
+  const [searchOptions, setSearchOptions] = useState([]);
+  const [generatedRecipe, setGeneratedRecipe] = useState('');
+  const [openGeneratedRecipe, setOpenGeneratedRecipe] = useState(false);
+  const [loadingGeneratedRecipe, setLoadingGeneratedRecipe] = useState(false);
+
+
   const getChecked = (event) => {
     setChecked(event.target.checked);
     setRecipes(false)
+    setGetRecipesClicked(true)
     setLoadingSearch(true)
     window.localStorage.setItem('searchCheckedHome', JSON.stringify(event.target.value))
   };
 
-  const [loadingSearch, setLoadingSearch] = useState(false)
-  const [recipes, setRecipes] = useState(false)
-  const [getRecipesClicked, setGetRecipesClicked] = useState(false)
   const getRecipes = () => {
     setGetRecipesClicked(true)
     setLoadingSearch(true)
   }
-  const [searchTerms, setSearchTerms] = useState([])
-  const [searchOptions, setSearchOptions] = useState([])
+
   const getSearchTerms = (terms) => {
-    console.log(terms)
     if (!terms) {
       setSearchTerms({})
       setSearchOptions([])
@@ -162,32 +185,22 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
   }
 
   useEffect(() => {
-    setRecipes(false)
-    console.log(searchTerms)
-    if (searchTerms && getRecipesClicked) {
-      setGetRecipesClicked(false)
+    setRecipes(false);
+    if (Object.keys(searchTerms).length > 0 && getRecipesClicked) {
+      setGetRecipesClicked(false);
       async function getData() {
         const getRecipesV2 = httpsCallable(functions, 'get_recipes_v2');
-        if (checked) {
-            const response = await getRecipesV2(
-                {searchTerms: searchTerms, userCookbooks: userCookbooks}
-            ).then(response => response.data.recipes)
-            setRecipes(response)
-            window.localStorage.setItem('recipesHome', JSON.stringify(response))
-            setLoadingSearch(false)
-        }
-        else {
-            const response = await getRecipesV2(
-                {searchTerms: searchTerms, userCookbooks: []}
-            ).then(response => response.data.recipes)
-            setRecipes(response)
-            window.localStorage.setItem('recipesHome', JSON.stringify(response))
-            setLoadingSearch(false)
-        }
+        const response = await getRecipesV2({
+          searchTerms: searchTerms,
+          userCookbooks: checked ? userCookbooks : [],
+        }).then(response => response.data.recipes);
+        setRecipes(response);
+        window.localStorage.setItem('recipesHome', JSON.stringify(response));
+        setLoadingSearch(false);
       }
-      getData()
+      getData();
     }
-  }, [getRecipesClicked])
+  }, [getRecipesClicked]);
 
   useEffect(() => {
     if (uid === "default") {setChecked(false)}
@@ -198,11 +211,35 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
     const storedSearchOptions = window.localStorage.getItem('searchOptionsHome');
     const storedRecipes = window.localStorage.getItem('recipesHome');
     const storedChecked = window.localStorage.getItem('searchCheckedHome');
-    if ( storedSearchTerms !== null ) setSearchTerms(JSON.parse(storedSearchTerms));
-    if ( storedSearchOptions !== null ) setSearchOptions(JSON.parse(storedSearchOptions));
-    if ( storedRecipes !== null ) setRecipes(JSON.parse(storedRecipes));
-    if ( storedChecked !== null ) setChecked(JSON.parse(storedChecked));
+    if (storedSearchTerms !== null) setSearchTerms(JSON.parse(storedSearchTerms));
+    if (storedSearchOptions !== null) setSearchOptions(JSON.parse(storedSearchOptions));
+    if (storedRecipes !== null) setRecipes(JSON.parse(storedRecipes));
+    if (storedChecked !== null) setChecked(JSON.parse(storedChecked));
   }, []);
+
+  const handleGenerateRecipe = async (title, ingredients) => {
+    setOpenGeneratedRecipe(true);
+    if (generatedRecipe.title?.toLowerCase() !== title.toLowerCase()) {
+      setLoadingGeneratedRecipe(true);
+      try {
+        const generateRecipe = httpsCallable(functions, 'generate_recipe');
+        const response = await generateRecipe({
+          title: title,
+          ingredients: ingredients,
+        }).then(response => response.data);
+        setLoadingGeneratedRecipe(false);
+        setGeneratedRecipe(response)
+      } catch (error) {
+        setOpenGeneratedRecipe(false);
+        setLoadingGeneratedRecipe(false);
+        console.error('Error generating recipe:', error);
+      }
+    }
+  };
+
+  const handleCloseGeneratedRecipe = () => {
+    setOpenGeneratedRecipe(false);
+  };
   
   const renderGroup = (params) => [
     <li key={params.key} style={{ color: 'rgba(79, 118, 226, 1)', fontWeight: 'bold', fontSize: '1.1em', marginLeft: '15px' }}>
@@ -220,7 +257,6 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
           backgroundColor: 'white',
           border: '1px solid rgb(58, 60, 123)',
           color: 'rgb(58, 60, 123)',
-          // Change background color on hover
           '&:hover': {
             backgroundColor: 'rgba(58, 60, 123, 0.5)',
           },
@@ -229,15 +265,31 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
       />
     ));
 
+  const [searchText, setSearchText] = useState('');
+  const [searchTextTimer, setSearchTextTimer] = useState(Date.now());
+  const getSearchText = (inputValue) => {
+    if (inputValue) {
+      setSearchText(inputValue);
+      setSearchTextTimer(Date.now());
+    }
+    else if (Date.now() - searchTextTimer > 200) {
+      setSearchText(inputValue);
+      setSearchTextTimer(Date.now());
+    }
+  }
+
   return (
     <Content>
       <StyledSearchBox>
         <Autocomplete
           multiple
           id="tags-standard"
-          openOnFocus={true}
           autoHighlight={true}
-          options={options.filter(option => !searchOptions.includes(option.name))}
+          options={options
+            .filter(option => !searchOptions.includes(option.name))
+            .filter(option => option.name.includes(searchText))
+            .slice(0, 200)
+          }
           groupBy={(option) => option.group}
           getOptionLabel={(option) => option.name}
           renderGroup={renderGroup}
@@ -245,7 +297,7 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
             <TextField
               {...params}
               variant="standard"
-              label="Search for recipes"
+              label="Search for recipes"  
               InputProps={{
                 ...params.InputProps,
                 endAdornment: (
@@ -262,12 +314,13 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
             </Box>
           )}
           renderTags={renderTags}
-          // Set width to 600px
           sx={{ width: "100%", marginRight: "15px" }}
           value={searchOptions.map((option) => options.find((o) => o.name === option))}
           onChange={(event, value) => getSearchTerms(value.map((option) => option))}
+          onInputChange={(event, inputValue) => {getSearchText(inputValue)}}
+          inputValue={searchText}
         />
-        <Button variant="contained" color="primary" sx={{height: "50px", width: "40px", backgroundColor: "rgb(59, 61, 123)"}} onClick={getRecipes}>
+        <Button variant="contained" color="primary" disabled={Object.keys(searchTerms).length === 0} sx={{height: "50px", width: "40px", backgroundColor: "rgb(59, 61, 123)"}} onClick={getRecipes}>
           <KeyboardReturnIcon/>
         </Button>
       </StyledSearchBox>
@@ -278,7 +331,7 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
           />}
           {uid === "default" && 
               <Tooltip title={ <div style={{fontSize: '14px', backgroundColor: 'black', padding: '5px 10px', margin: '-3px -8px', borderRadius: '5px'}}>Sign in to search with your cookbooks</div>}>
-                  <Checkbox checked={false} />
+                  <Checkbox checked={false} disabled={Object.keys(searchTerms).length === 0} />
               </Tooltip>
           }
           <StyledCheckboxText>Search with only your cookbooks</StyledCheckboxText>
@@ -293,24 +346,67 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
       </Grid>}
 
       {recipes?.length > 0 && <StyledRecipeSection>
-          
           {recipes?.map((recipe, index) => (
               <StyledRecipe key={index}>
+                <div style={{display: 'flex', justifyContent: 'space-between'}}>
                   <StyledRecipeName>{recipe.title}</StyledRecipeName>
+                  <Button
+                    sx={{
+                      fontSize: "10px",
+                      backgroundColor: "rgb(59, 61, 123)",
+                      '&:hover': {
+                        backgroundColor: "rgb(39, 41, 83)",
+                      },
+                      border: "1px solid rgb(59, 61, 123)",
+                      color: "white",
+                      float: "right",
+                      fontSize: {xs: '8px',  sm: '10px'},
+                      marginBottom: {xs: '5px',  sm: '0px'},
+                    }}
+                    onClick={() => handleGenerateRecipe(recipe.title, recipe.ingredients)}
+                  >
+                    Generate a recipe like this
+                  </Button>
+                  </div>
                       <StyledBookAndPage>
                           <Link to="/cookbooks">
-                          <StyledBook onClick={(e) => getCookbookFromSearch(e.target.textContent)}>{recipe.book} by {recipe.author}</StyledBook>
+                            <StyledBook onClick={(e) => getCookbookFromSearch(e.target.textContent)}>{recipe.book} by {recipe.author}</StyledBook>
                           </Link>
-                          
                           <StyledPageNumber>Page: {recipe.page}</StyledPageNumber>
                       </StyledBookAndPage>
-                      <StyledIngredientsAndCategories>
-                          <StyledIngredientsAndCategoriesTitle>Ingredients:</StyledIngredientsAndCategoriesTitle>
-                          {recipe.ingredients.join(', ')}
-                      </StyledIngredientsAndCategories>
+                        <StyledIngredientsAndCategories>
+                            <StyledIngredientsAndCategoriesTitle>Ingredients:</StyledIngredientsAndCategoriesTitle>
+                            {recipe.ingredients.join(', ')}
+                        </StyledIngredientsAndCategories>
               </StyledRecipe>
           ))}
       </StyledRecipeSection>}
+      {(generatedRecipe || loadingGeneratedRecipe) && <Dialog open={openGeneratedRecipe} onClose={handleCloseGeneratedRecipe} maxWidth="md">
+        {loadingGeneratedRecipe && <div style={{justifyContent: 'center', display: 'flex', margin: '200px auto 0px', width: "800px", maxWidth: "100%", height: "350px"}}>
+          <CircularProgress/>
+        </div>}
+        {!loadingGeneratedRecipe && <div>
+          <StyledGeneratedRecipeTitle>{generatedRecipe.title}</StyledGeneratedRecipeTitle>
+          <StyledGeneratedRecipeInfo>
+            <Typography>Total time: {generatedRecipe.total_time}</Typography>
+            <Typography style={{marginBottom: "10px"}}>Servings: {generatedRecipe.servings}</Typography>
+            <StyledGeneratedRecipeIngredientsAndInstructions>
+              <div style={{display: "block", width: "250px", marginRight: "40px"}}>
+                <StyledGeneratedRecipeSubTitle>Ingredients</StyledGeneratedRecipeSubTitle>
+                {generatedRecipe.ingredients.map((ingredient, index) => (
+                  <Typography style={{marginBottom: "5px"}} key={index}>{ingredient}</Typography>
+                ))}
+              </div>
+              <div style={{display: "block", width: "500px", maxWidth: "100%"}}>
+                <StyledGeneratedRecipeSubTitle>Instructions</StyledGeneratedRecipeSubTitle>
+                {generatedRecipe.instructions.split("\n").map((instruction, index) => (
+                  <Typography style={{marginBottom: "15px"}} key={index}>{instruction}</Typography>
+                ))}
+              </div>
+            </StyledGeneratedRecipeIngredientsAndInstructions>
+          </StyledGeneratedRecipeInfo>  
+        </div>}
+      </Dialog>}
       {recipes?.length === 0 && <StyledNoRecipes>
           No recipes were found with these ingredients.
       </StyledNoRecipes>}
