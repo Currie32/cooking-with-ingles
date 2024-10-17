@@ -16,7 +16,7 @@ logger = logging.getLogger()
 logging.basicConfig(level=logging.INFO)
 
 
-@app.route('/save-user-cookbooks', methods=['GET', 'OPTIONS'])
+@app.route('/read-cookbooks', methods=['GET', 'OPTIONS'])
 def read_cookbook(request):
     if request.method == 'OPTIONS':
         headers = {
@@ -31,7 +31,7 @@ def read_cookbook(request):
     logger.info(request_parsed)
     cookbook = request_parsed['data']['cookbook']
 
-    with open('./recipes.pkl', 'rb') as fh:
+    with open('./recipes.pickle', 'rb') as fh:
         recipes = pickle.load(fh)
 
     recipes = [r for r in recipes if r['book'] in cookbook]
