@@ -142,7 +142,6 @@ function NavigationAuth() {
       {menuDisplay && <ListOrdered>
         <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.HOME} onClick={() => setMenuDisplay(false)}>Home</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
         <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.SAVED} onClick={() => setMenuDisplay(false)}>Saved</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
-        <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.CREATE} onClick={() => setMenuDisplay(false)}>Create</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
         <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.COOKBOOKS} onClick={() => setMenuDisplay(false)}>Cookbooks</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
         <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.ACCOUNT} onClick={() => setMenuDisplay(false)}>Account</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
         <ListItemVertical style={{paddingBottom: '20px'}}><StyledListItemVerticalShadow><ButtonSignOut onClick={() => {setMenuDisplay(false); logout()}}>Sign out</ButtonSignOut></StyledListItemVerticalShadow></ListItemVertical>
@@ -153,7 +152,6 @@ function NavigationAuth() {
         <ListItem><HomeLink to={ROUTES.HOME}>Cooking with Ingles</HomeLink></ListItem>
         <ListItem></ListItem>
         <ListItem><StyledLink to={ROUTES.SAVED}>Saved</StyledLink></ListItem>
-        <ListItem><StyledLink to={ROUTES.CREATE}>Create</StyledLink></ListItem>
         <ListItem><StyledLink to={ROUTES.COOKBOOKS}>Cookbooks</StyledLink></ListItem>
         <ListItem><StyledLink to={ROUTES.ACCOUNT}>Account</StyledLink></ListItem>
         <ListItem><ButtonSignOut onClick={logout}>Sign out</ButtonSignOut></ListItem>
@@ -177,7 +175,6 @@ function NavigationNonAuth() {
       {menuDisplay && <ListOrdered>
         <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.HOME} onClick={() => setMenuDisplay(false)}>Home</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
         <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.SAVED} onClick={() => setMenuDisplay(false)}>Saved</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
-        <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.CREATE} onClick={() => setMenuDisplay(false)}>Create</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
         <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.COOKBOOKS} onClick={() => setMenuDisplay(false)}>Cookbooks</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
         <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.LOG_IN} onClick={() => setMenuDisplay(false)}>Log In</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
         <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.SIGN_UP} onClick={() => setMenuDisplay(false)}>Sign Up</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
@@ -188,7 +185,6 @@ function NavigationNonAuth() {
         <ListItem><HomeLink to={ROUTES.HOME}>Cooking with Ingles</HomeLink></ListItem>
         <ListItem></ListItem>
         <ListItem><StyledLink to={ROUTES.SAVED}>Saved</StyledLink></ListItem>
-        <ListItem><StyledLink to={ROUTES.CREATE}>Create</StyledLink></ListItem>
         <ListItem><StyledLink to={ROUTES.COOKBOOKS}>Cookbooks</StyledLink></ListItem>
         <ListItem><StyledLink to={ROUTES.LOG_IN}>Log In</StyledLink></ListItem>
         <ListItem><StyledLink to={ROUTES.SIGN_UP}>Sign Up</StyledLink></ListItem>

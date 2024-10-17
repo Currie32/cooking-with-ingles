@@ -1,5 +1,4 @@
 export const ACCOUNT = '/account';
-export const CREATE = '/create';
 export const COOKBOOKS = '/cookbooks';
 export const HOME = '/';
 export const LOG_IN = '/log-in';
