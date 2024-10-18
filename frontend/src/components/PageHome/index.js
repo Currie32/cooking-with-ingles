@@ -1,4 +1,5 @@
 import { getFunctions, httpsCallable } from 'firebase/functions';
+import { doc, getDoc, getFirestore, setDoc } from "firebase/firestore";
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Grid from '@material-ui/core/Grid';
 import TextField from '@material-ui/core/TextField';
@@ -15,8 +16,12 @@ import { Fragment, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import styled from 'styled-components';
 import Button from '@mui/material/Button';
+import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
+import { createFilterOptions } from '@mui/material/Autocomplete';
 
 import options from './searchTerms.json';
+
+const filterAutocomplete = createFilterOptions();
 
 
 const Content = styled.div`
@@ -141,6 +146,7 @@ const mapTermsToGroups = (terms) => {
 
 export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
 
+  const db = getFirestore();
   const functions = getFunctions();
 
   const [checked, setChecked] = useState(false);
@@ -152,6 +158,58 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
   const [generatedRecipe, setGeneratedRecipe] = useState('');
   const [openGeneratedRecipe, setOpenGeneratedRecipe] = useState(false);
   const [loadingGeneratedRecipe, setLoadingGeneratedRecipe] = useState(false);
+
+
+  const [userRecipeLists, setUserRecipeLists] = useState({});
+  const [userRecipeCategories, setUserRecipeCategories] = useState([]);
+  const handleCategoryChange = (event, value, recipeId) => {
+    const filteredValue = value.map((option) => {
+      if (option?.label?.startsWith('Create new list: ')) {
+        return option?.label.slice('Create new list: '.length).replace(/['"]+/g, '');
+      }
+      return option.replace(/['"]+/g, '');
+    })
+    setUserRecipeLists((prev) => ({
+      ...prev,
+      [recipeId]: filteredValue,
+    }));
+  };
+
+  useEffect(() => {
+    setUserRecipeCategories([...new Set(Object.values(userRecipeLists).flat())]);
+
+    const updateRecipeLists = async () => {  
+      await setDoc(doc(db, 'users_recipe_lists', uid), userRecipeLists);
+    };
+    if (uid) {updateRecipeLists()};
+  }, [userRecipeLists]);
+
+
+  const [updatedOptions, setUpdatedOptions] = useState([]);
+  useEffect(() => {
+    const mappedCategories = userRecipeCategories.map((category) => {
+        return { name: category, group: 'Recipe list' };
+    });
+    const updatedOptionsNew = mappedCategories.concat(options);
+    setUpdatedOptions(updatedOptionsNew);
+}, [userRecipeCategories, options]);
+
+  
+
+  useEffect(() => {
+    const fetchRecipeList = async () => {
+      try {
+        const docRef = doc(db, 'users_recipe_lists', uid);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {setUserRecipeLists(docSnap.data())}
+        else {setUserRecipeLists({})}
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    if (uid) {fetchRecipeList()}
+  }, [uid]);
 
 
   const getChecked = (event) => {
@@ -265,6 +323,22 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
       />
     ));
 
+    const renderTagsDark = (value, getTagProps) => 
+    value.map((option, index) => (
+      <Chip
+        {...getTagProps({ index })}
+        label={option}
+        style={{
+          backgroundColor: 'rgba(59, 61, 123, 1)',
+          color: 'rgb(255, 255, 255)',
+          '&:hover': {
+            backgroundColor: 'rgba(58, 60, 123, 0.5)',
+          },
+        }}
+        deleteIcon={<CancelIcon style={{ color: 'rgb(255, 255, 255)', }} />}
+      />
+    ));
+
   const [searchText, setSearchText] = useState('');
   const [searchTextTimer, setSearchTextTimer] = useState(Date.now());
   const getSearchText = (inputValue) => {
@@ -278,6 +352,14 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
     }
   }
 
+  const [openStates, setOpenStates] = useState({});
+  const handleIconClick = (id) => {
+    setOpenStates((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+  
   return (
     <Content>
       <StyledSearchBox>
@@ -285,7 +367,7 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
           multiple
           id="tags-standard"
           autoHighlight={true}
-          options={options
+          options={updatedOptions
             .filter(option => !searchOptions.includes(option.name))
             .filter(option => option.name.includes(searchText))
             .slice(0, 200)
@@ -367,17 +449,67 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
                   >
                     Generate a recipe like this
                   </Button>
-                  </div>
-                      <StyledBookAndPage>
-                          <Link to="/cookbooks">
-                            <StyledBook onClick={(e) => getCookbookFromSearch(e.target.textContent)}>{recipe.book} by {recipe.author}</StyledBook>
-                          </Link>
-                          <StyledPageNumber>Page: {recipe.page}</StyledPageNumber>
-                      </StyledBookAndPage>
-                        <StyledIngredientsAndCategories>
-                            <StyledIngredientsAndCategoriesTitle>Ingredients:</StyledIngredientsAndCategoriesTitle>
-                            {recipe.ingredients.join(', ')}
-                        </StyledIngredientsAndCategories>
+                </div>
+                <StyledBookAndPage>
+                    <Link to="/cookbooks">
+                      <StyledBook onClick={(e) => getCookbookFromSearch(e.target.textContent)}>{recipe.book} by {recipe.author}</StyledBook>
+                    </Link>
+                    <StyledPageNumber>Page: {recipe.page}</StyledPageNumber>
+                </StyledBookAndPage>
+                <StyledIngredientsAndCategories>
+                    <StyledIngredientsAndCategoriesTitle>Ingredients:</StyledIngredientsAndCategoriesTitle>
+                    {recipe.ingredients.join(', ')}
+                </StyledIngredientsAndCategories>
+                <div style={{display: 'flex'}}>
+                  {((Object.keys(openStates).length === 0 || openStates[recipe.title]) && !userRecipeLists[recipe.title]?.length > 0) && <PlaylistAddIcon 
+                    onClick={() => handleIconClick(recipe.title)} 
+                    sx={{
+                      cursor: 'pointer',
+                      color: 'rgb(59, 61, 123)',
+                      borderRadius: '50%',
+                      marginBottom: openStates[recipe.title] ? '10px' : '0px',
+                      marginTop: 'auto',
+                      marginRight: '20px',
+                      padding: '5px',
+                      '&:hover': {
+                        backgroundColor: 'rgba(59, 61, 123, 0.2)',
+                      },
+                      '&:active': {
+                        backgroundColor: 'rgba(59, 61, 123, 0.3)',
+                      }
+                    }} 
+                  />}
+                  {(openStates[recipe.title] || userRecipeLists[recipe.title]?.length > 0) && (
+                    <Autocomplete
+                      multiple
+                      autoSelect={true}
+                      freeSolo={true}
+                      options={userRecipeCategories.filter(category => !userRecipeLists[recipe.title]?.includes(category))}
+                      openOnFocus={true}
+                      renderTags={renderTagsDark}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label={'Add recipes to list(s)'}
+                          variant="outlined"
+                        />
+                      )}
+                      filterOptions={(options, params) => {
+                        const filtered = filterAutocomplete(options, params);
+                        if (params.inputValue !== '' && !userRecipeCategories.some(category => category === params.inputValue)) {
+                          filtered.push({
+                            title: params.inputValue,
+                            label: `Create new list: "${params.inputValue}"`,
+                          });
+                        }
+                        return filtered;
+                      }}
+                      value={userRecipeLists[recipe.title] || []}
+                      onChange={(event, value) => handleCategoryChange(event, value, recipe.title)}
+                      style={{ width: "100%", marginTop: 10 }}
+                    />
+                  )}
+                </div>
               </StyledRecipe>
           ))}
       </StyledRecipeSection>}
