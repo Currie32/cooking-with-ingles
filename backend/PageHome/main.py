@@ -29,6 +29,7 @@ def get_recipes_v2(request):
     logger.info(request_parsed)
     search_terms = request_parsed['data']["searchTerms"]
     user_cookbooks = request_parsed['data']['userCookbooks']
+    user_recipe_lists_ids = request_parsed['data']['userRecipeListsIds']
 
     with open('recipes.pickle', 'rb') as f:
         recipes_all = pickle.load(f)
@@ -43,6 +44,13 @@ def get_recipes_v2(request):
             indices_ingredient = recipe_index.get(ingredient)
             if indices_ingredient:
                 indices_recipes = indices_recipes & set(indices_ingredient)
+
+    if user_recipe_lists_ids:
+        recipes_from_lists = [
+            index for index, recipe in enumerate(recipes_all)
+            if recipe['id'] in user_recipe_lists_ids
+        ]
+        indices_recipes = indices_recipes & set(recipes_from_lists)
 
     if user_cookbooks:
         indices_user_cookbooks = []
@@ -61,7 +69,8 @@ def get_recipes_v2(request):
     if "recipes" in search_terms:
         recipes = [r for r in recipes if r["title"] in search_terms["recipes"]]
 
-    recipes = sorted(recipes, key=lambda x: len(x["ingredients"]))
+    if not (len(list(search_terms.keys())) == 1 and len(search_terms.get("cookbooks", [])) == 1):
+        recipes = sorted(recipes, key=lambda x: len(x["ingredients"]))
 
     response = {'recipes': recipes}
 

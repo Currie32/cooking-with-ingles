@@ -33,6 +33,7 @@ const NavbarSmall = styled.div`
 `;
 const StyledMenuIcon = styled.div`
   background-color: rgba(0, 0, 0, 0.8);
+  border-radius: 5px;
   margin: 20px 0px 0px 20px;
   padding: 4px 5px 0px;
   width: fit-content;
@@ -114,7 +115,7 @@ const ButtonSignOut = styled.div`
   color: rgba(255, 255, 255, 0.9);
   padding-top: 5px;
   @media (max-width: 1050px) {
-    margin-top: 2px;
+    margin-top: -5px;
   }
 `;
 
@@ -140,19 +141,17 @@ function NavigationAuth() {
         <StyledHomeLink><HomeLink to={ROUTES.HOME}>Cooking with Ingles</HomeLink></StyledHomeLink>
       </NavbarSmall>
       {menuDisplay && <ListOrdered>
-        <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.HOME} onClick={() => setMenuDisplay(false)}>Home</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
-        <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.SAVED} onClick={() => setMenuDisplay(false)}>Saved</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
-        <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.COOKBOOKS} onClick={() => setMenuDisplay(false)}>Cookbooks</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
+        <ListItemVertical><StyledListItemVerticalShadow style={{paddingTop: "15px", borderRadius: "10px 10px 0px 0px"}}><StyledLink to={ROUTES.HOME} onClick={() => setMenuDisplay(false)}>Home</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
+        {/* <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.SAVED} onClick={() => setMenuDisplay(false)}>Saved</StyledLink></StyledListItemVerticalShadow></ListItemVertical> */}
         <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.ACCOUNT} onClick={() => setMenuDisplay(false)}>Account</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
-        <ListItemVertical style={{paddingBottom: '20px'}}><StyledListItemVerticalShadow><ButtonSignOut onClick={() => {setMenuDisplay(false); logout()}}>Sign out</ButtonSignOut></StyledListItemVerticalShadow></ListItemVertical>
+        <ListItemVertical style={{paddingBottom: '20px'}}><StyledListItemVerticalShadow style={{paddingBottom: "15px", borderRadius: "0px 0px 10px 10px"}}><ButtonSignOut onClick={() => {setMenuDisplay(false); logout()}}>Sign out</ButtonSignOut></StyledListItemVerticalShadow></ListItemVertical>
       </ListOrdered>}
     </div>}
     {window.innerWidth >= 1050 && <Navbar>
       <List>
         <ListItem><HomeLink to={ROUTES.HOME}>Cooking with Ingles</HomeLink></ListItem>
         <ListItem></ListItem>
-        <ListItem><StyledLink to={ROUTES.SAVED}>Saved</StyledLink></ListItem>
-        <ListItem><StyledLink to={ROUTES.COOKBOOKS}>Cookbooks</StyledLink></ListItem>
+        {/* <ListItem><StyledLink to={ROUTES.SAVED}>Saved</StyledLink></ListItem> */}
         <ListItem><StyledLink to={ROUTES.ACCOUNT}>Account</StyledLink></ListItem>
         <ListItem><ButtonSignOut onClick={logout}>Sign out</ButtonSignOut></ListItem>
       </List>
@@ -174,8 +173,7 @@ function NavigationNonAuth() {
       </NavbarSmall>
       {menuDisplay && <ListOrdered>
         <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.HOME} onClick={() => setMenuDisplay(false)}>Home</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
-        <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.SAVED} onClick={() => setMenuDisplay(false)}>Saved</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
-        <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.COOKBOOKS} onClick={() => setMenuDisplay(false)}>Cookbooks</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
+        {/* <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.SAVED} onClick={() => setMenuDisplay(false)}>Saved</StyledLink></StyledListItemVerticalShadow></ListItemVertical> */}
         <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.LOG_IN} onClick={() => setMenuDisplay(false)}>Log In</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
         <ListItemVertical><StyledListItemVerticalShadow><StyledLink to={ROUTES.SIGN_UP} onClick={() => setMenuDisplay(false)}>Sign Up</StyledLink></StyledListItemVerticalShadow></ListItemVertical>
       </ListOrdered>}
@@ -184,8 +182,7 @@ function NavigationNonAuth() {
       <List>
         <ListItem><HomeLink to={ROUTES.HOME}>Cooking with Ingles</HomeLink></ListItem>
         <ListItem></ListItem>
-        <ListItem><StyledLink to={ROUTES.SAVED}>Saved</StyledLink></ListItem>
-        <ListItem><StyledLink to={ROUTES.COOKBOOKS}>Cookbooks</StyledLink></ListItem>
+        {/* <ListItem><StyledLink to={ROUTES.SAVED}>Saved</StyledLink></ListItem> */}
         <ListItem><StyledLink to={ROUTES.LOG_IN}>Log In</StyledLink></ListItem>
         <ListItem><StyledLink to={ROUTES.SIGN_UP}>Sign Up</StyledLink></ListItem>
       </List>

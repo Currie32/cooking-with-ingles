@@ -13,7 +13,6 @@ import Footer from './components/Footer';
 import PageTermsOfUse from './components/Footer/termsOfUse';
 import Navigation from './components/Navigation';
 import PageAccount from './components/PageAccount';
-import PageCookbooks from './components/PageCookbooks';
 import PageHome from './components/PageHome';
 import PageLogIn from './components/PageLogIn';
 import PagePasswordForgot from './components/PagePasswordForgot';
@@ -99,8 +98,7 @@ export default function App() {
             <Routes>
               <Route path={ROUTES.ACCOUNT} element={<PageAccount uid={uid} userCookbooks={userCookbooks} getUserCookbooks={getUserCookbooks} />}/>
               <Route path={ROUTES.HOME} element={<PageHome uid={uid} userCookbooks={userCookbooks} getCookbookFromSearch={getCookbookFromSearch} />}/>
-              <Route path={ROUTES.SAVED} element={<PageSaved uid={uid} />}/>
-              <Route path={ROUTES.COOKBOOKS} element={<PageCookbooks cookbookFromSearch={cookbookFromSearch} />}/>
+              {/* <Route path={ROUTES.SAVED} element={<PageSaved uid={uid} />}/> */}
               <Route path={ROUTES.LOG_IN} element={<PageLogIn />} />
               <Route path={ROUTES.PASSWORD_FORGET} element={<PagePasswordForgot />} />
               <Route path={ROUTES.SIGN_UP} element={<PageSignUp />} />
