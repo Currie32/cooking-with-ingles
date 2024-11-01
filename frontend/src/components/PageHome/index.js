@@ -1,4 +1,5 @@
 import { getFunctions, httpsCallable } from 'firebase/functions';
+import { doc, getDoc, getFirestore, setDoc } from "firebase/firestore";
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Grid from '@material-ui/core/Grid';
 import TextField from '@material-ui/core/TextField';
@@ -15,8 +16,12 @@ import { Fragment, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import styled from 'styled-components';
 import Button from '@mui/material/Button';
+import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
+import { createFilterOptions } from '@mui/material/Autocomplete';
 
 import options from './searchTerms.json';
+
+const filterAutocomplete = createFilterOptions();
 
 
 const Content = styled.div`
@@ -141,6 +146,7 @@ const mapTermsToGroups = (terms) => {
 
 export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
 
+  const db = getFirestore();
   const functions = getFunctions();
 
   const [checked, setChecked] = useState(false);
@@ -152,14 +158,82 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
   const [generatedRecipe, setGeneratedRecipe] = useState('');
   const [openGeneratedRecipe, setOpenGeneratedRecipe] = useState(false);
   const [loadingGeneratedRecipe, setLoadingGeneratedRecipe] = useState(false);
+  const [notLoggedInMessageCheckbox, setNotLoggedInMessageCheckbox] = useState(false)
+  const [notLoggedInMessageRecipeList, setNotLoggedInMessageRecipeList] = useState(false)
+
+  useEffect(() => {
+    if (uid === "default") {setChecked(false)}
+    else {
+      setNotLoggedInMessageCheckbox(false)
+      setNotLoggedInMessageRecipeList(false)
+    }
+  }, [uid])
+
+
+  const [userRecipeLists, setUserRecipeLists] = useState({});
+  const [userRecipeCategories, setUserRecipeCategories] = useState([]);
+  const handleCategoryChange = (event, value, recipeId) => {
+    const filteredValue = value.map((option) => {
+      if (option?.label?.startsWith('Create new list: ')) {
+        return option?.label.slice('Create new list: '.length).replace(/['"]+/g, '');
+      }
+      return option.replace(/['"]+/g, '');
+    })
+    setUserRecipeLists((prev) => ({
+      ...prev,
+      [recipeId]: filteredValue,
+    }));
+  };
+
+  useEffect(() => {
+    setUserRecipeCategories([...new Set(Object.values(userRecipeLists).flat())]);
+
+    const updateRecipeLists = async () => {  
+      await setDoc(doc(db, 'users_recipe_lists', uid), userRecipeLists);
+    };
+    if (uid) {updateRecipeLists()};
+  }, [userRecipeLists]);
+
+
+  const [updatedOptions, setUpdatedOptions] = useState([]);
+  useEffect(() => {
+    const mappedCategories = userRecipeCategories.map((category) => {
+        return { name: category, group: 'Recipe list' };
+    });
+    const updatedOptionsNew = mappedCategories.concat(options);
+    setUpdatedOptions(updatedOptionsNew);
+}, [userRecipeCategories, options]);
+  
+
+  useEffect(() => {
+    const fetchRecipeList = async () => {
+      try {
+        const docRef = doc(db, 'users_recipe_lists', uid);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {setUserRecipeLists(docSnap.data())}
+        else {setUserRecipeLists({})}
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    if (uid) {fetchRecipeList()}
+  }, [uid]);
 
 
   const getChecked = (event) => {
-    setChecked(event.target.checked);
-    setRecipes(false)
-    setGetRecipesClicked(true)
-    setLoadingSearch(true)
-    window.localStorage.setItem('searchCheckedHome', JSON.stringify(event.target.value))
+    if (uid === "default") {
+      setNotLoggedInMessageCheckbox(true)
+    }
+    else {
+      setChecked(event.target.checked);
+      setGetRecipesClicked(true)
+      if (Object.keys(searchTerms).length > 0) {
+        setRecipes(false)
+        setLoadingSearch(true)
+      }
+      window.localStorage.setItem('searchCheckedHome', JSON.stringify(event.target.value))
+    }
   };
 
   const getRecipes = () => {
@@ -173,6 +247,11 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
       setSearchOptions([])
       window.localStorage.setItem('searchTermsHome', JSON.stringify({}))
       window.localStorage.setItem('searchOptionsHome', JSON.stringify([]))
+
+      // Clear search terms from the URL
+      const url = new URL(window.location);
+      url.searchParams.delete('search');
+      window.history.replaceState(null, '', url);
     }
     else {
       const searchTermsNew = mapTermsToGroups(terms);
@@ -181,18 +260,55 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
       setSearchOptions(searchOptionsNew)
       window.localStorage.setItem('searchTermsHome', JSON.stringify(searchTermsNew))
       window.localStorage.setItem('searchOptionsHome', JSON.stringify(searchOptionsNew))
+
+      // Add search terms to the URL
+      const url = new URL(window.location);
+      url.searchParams.set('search', JSON.stringify(searchTermsNew));
+      window.history.replaceState(null, '', url);
     }
   }
+
+  useEffect(() => {
+    const url = new URL(window.location);
+    const searchParams = url.searchParams.get('search');
+    
+    if (searchParams) {
+      try {
+        const searchTermsFromUrl = JSON.parse(searchParams);
+        const searchOptionsFromUrl = Object.values(searchTermsFromUrl).flat()
+
+        setChecked(false)
+        setSearchTerms(searchTermsFromUrl);
+        setSearchOptions(searchOptionsFromUrl);
+        window.localStorage.setItem('searchTermsHome', JSON.stringify(searchTermsFromUrl));
+        window.localStorage.setItem('searchOptionsHome', JSON.stringify(searchOptionsFromUrl));
+        
+        setLoadingSearch(true)
+        setGetRecipesClicked(true);
+      } catch (error) {
+        console.error("Failed to parse search terms from URL:", error);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     setRecipes(false);
     if (Object.keys(searchTerms).length > 0 && getRecipesClicked) {
       setGetRecipesClicked(false);
       async function getData() {
+
+        const userRecipeListIds = searchTerms["recipe list"]?.reduce((acc, term) => {
+          const matchingIds = Object.entries(userRecipeLists)
+              .filter(([_, listName]) => listName.includes(term))
+              .map(([id]) => id);
+          return [...acc, ...matchingIds];
+        }, []);
+
         const getRecipesV2 = httpsCallable(functions, 'get_recipes_v2');
         const response = await getRecipesV2({
           searchTerms: searchTerms,
           userCookbooks: checked ? userCookbooks : [],
+          userRecipeListsIds: userRecipeListIds,
         }).then(response => response.data.recipes);
         setRecipes(response);
         window.localStorage.setItem('recipesHome', JSON.stringify(response));
@@ -203,10 +319,6 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
   }, [getRecipesClicked]);
 
   useEffect(() => {
-    if (uid === "default") {setChecked(false)}
-  }, [uid])
-
-  useEffect(() => {
     const storedSearchTerms = window.localStorage.getItem('searchTermsHome');
     const storedSearchOptions = window.localStorage.getItem('searchOptionsHome');
     const storedRecipes = window.localStorage.getItem('recipesHome');
@@ -214,7 +326,7 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
     if (storedSearchTerms !== null) setSearchTerms(JSON.parse(storedSearchTerms));
     if (storedSearchOptions !== null) setSearchOptions(JSON.parse(storedSearchOptions));
     if (storedRecipes !== null) setRecipes(JSON.parse(storedRecipes));
-    if (storedChecked !== null) setChecked(JSON.parse(storedChecked));
+    // if (storedChecked !== null) setChecked(JSON.parse(storedChecked));
   }, []);
 
   const handleGenerateRecipe = async (title, ingredients) => {
@@ -252,7 +364,7 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
     value.map((option, index) => (
       <Chip
         {...getTagProps({ index })}
-        label={option.name}
+        label={option?.name}
         style={{
           backgroundColor: 'white',
           border: '1px solid rgb(58, 60, 123)',
@@ -262,6 +374,22 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
           },
         }}
         deleteIcon={<CancelIcon style={{ color: 'rgb(58, 60, 123)' }} />}
+      />
+    ));
+
+    const renderTagsDark = (value, getTagProps) => 
+    value.map((option, index) => (
+      <Chip
+        {...getTagProps({ index })}
+        label={option}
+        style={{
+          backgroundColor: 'rgba(59, 61, 123, 1)',
+          color: 'rgb(255, 255, 255)',
+          '&:hover': {
+            backgroundColor: 'rgba(58, 60, 123, 0.5)',
+          },
+        }}
+        deleteIcon={<CancelIcon style={{ color: 'rgb(255, 255, 255)', }} />}
       />
     ));
 
@@ -278,6 +406,14 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
     }
   }
 
+  const [openStates, setOpenStates] = useState({});
+  const handleIconClick = (id) => {
+    setOpenStates((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+  
   return (
     <Content>
       <StyledSearchBox>
@@ -285,9 +421,9 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
           multiple
           id="tags-standard"
           autoHighlight={true}
-          options={options
+          options={updatedOptions
             .filter(option => !searchOptions.includes(option.name))
-            .filter(option => option.name.includes(searchText))
+            .filter(option => option.name.toLowerCase().includes(searchText.toLowerCase()))
             .slice(0, 200)
           }
           groupBy={(option) => option.group}
@@ -315,7 +451,7 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
           )}
           renderTags={renderTags}
           sx={{ width: "100%", marginRight: "15px" }}
-          value={searchOptions.map((option) => options.find((o) => o.name === option))}
+          value={searchOptions.map((option) => updatedOptions.find((o) => o.name === option))}
           onChange={(event, value) => getSearchTerms(value.map((option) => option))}
           onInputChange={(event, inputValue) => {getSearchText(inputValue)}}
           inputValue={searchText}
@@ -325,17 +461,19 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
         </Button>
       </StyledSearchBox>
       <StyledCheckbox>
-          {uid !== "default" && <Checkbox
-              checked={checked} onChange={getChecked} inputProps={{ 'aria-label': 'controlled' }} 
-              sx={{color: "rgb(59, 61, 123)", '&.Mui-checked': {color: "rgb(59, 61, 123)"}}}
-          />}
-          {uid === "default" && 
-              <Tooltip title={ <div style={{fontSize: '14px', backgroundColor: 'black', padding: '5px 10px', margin: '-3px -8px', borderRadius: '5px'}}>Sign in to search with your cookbooks</div>}>
-                  <Checkbox checked={false} disabled={Object.keys(searchTerms).length === 0} />
-              </Tooltip>
-          }
+          <Checkbox checked={checked} onChange={getChecked} inputProps={{ 'aria-label': 'controlled' }} 
+            sx={{color: "rgb(59, 61, 123)", '&.Mui-checked': {color: "rgb(59, 61, 123)"}}}
+          />
           <StyledCheckboxText>Search with only your cookbooks</StyledCheckboxText>
       </StyledCheckbox>
+      {notLoggedInMessageCheckbox && <p style={{
+        backgroundColor: "rgba(59, 61, 123, 0.9)",
+        borderRadius: "5px",
+        color: "white",
+        marginTop: "-5px",
+        maxWidth: "300px",
+        padding: "5px 10px"
+      }}>Log in to search using your own cookbooks</p>}
 
       <StyledRequest>
         Want to search another cookbook? Request it by <a target="_blank" rel="noreferrer" href="https://docs.google.com/forms/d/e/1FAIpQLSfPveAlQDH0RIx0qWWmibA2nKxq7Rl7wIFn6j_Mysba1iZJlQ/viewform">clicking here.</a>
@@ -367,17 +505,79 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
                   >
                     Generate a recipe like this
                   </Button>
-                  </div>
-                      <StyledBookAndPage>
-                          <Link to="/cookbooks">
-                            <StyledBook onClick={(e) => getCookbookFromSearch(e.target.textContent)}>{recipe.book} by {recipe.author}</StyledBook>
-                          </Link>
-                          <StyledPageNumber>Page: {recipe.page}</StyledPageNumber>
-                      </StyledBookAndPage>
-                        <StyledIngredientsAndCategories>
-                            <StyledIngredientsAndCategoriesTitle>Ingredients:</StyledIngredientsAndCategoriesTitle>
-                            {recipe.ingredients.join(', ')}
-                        </StyledIngredientsAndCategories>
+                </div>
+                <StyledBookAndPage>
+                    <Link to="/cookbooks">
+                      <StyledBook onClick={(e) => getCookbookFromSearch(e.target.textContent)}>{recipe.book} by {recipe.author}</StyledBook>
+                    </Link>
+                    <StyledPageNumber>Page: {recipe.page}</StyledPageNumber>
+                </StyledBookAndPage>
+                <StyledIngredientsAndCategories>
+                    <StyledIngredientsAndCategoriesTitle>Ingredients:</StyledIngredientsAndCategoriesTitle>
+                    {recipe.ingredients.join(', ')}
+                </StyledIngredientsAndCategories>
+                <div style={{display: 'flex'}}>
+                  {((Object.keys(openStates).length === 0 || !openStates[recipe.id]) && !userRecipeLists[recipe.id]?.length > 0) && <PlaylistAddIcon 
+                    onClick={() => handleIconClick(recipe.id)} 
+                    sx={{
+                      cursor: 'pointer',
+                      color: 'rgb(59, 61, 123)',
+                      borderRadius: '50%',
+                      marginBottom: openStates[recipe.id] ? '10px' : '0px',
+                      marginTop: 'auto',
+                      marginRight: '20px',
+                      padding: '5px',
+                      '&:hover': {
+                        backgroundColor: 'rgba(59, 61, 123, 0.2)',
+                      },
+                      '&:active': {
+                        backgroundColor: 'rgba(59, 61, 123, 0.3)',
+                      }
+                    }} 
+                  />}
+                  {(openStates[recipe.id] || (userRecipeLists[recipe.id]?.length > 0)) && (
+                    uid === "default" ? (
+                      <p style={{
+                        backgroundColor: "rgba(59, 61, 123, 0.9)",
+                        borderRadius: "5px",
+                        color: "white",
+                        padding: "5px 10px",
+                        maxWidth: "100%"
+                      }}>
+                        Log in to add recipes to a list
+                      </p>
+                    ) : (
+                      <Autocomplete
+                        multiple
+                        autoSelect
+                        freeSolo
+                        options={userRecipeCategories.filter(category => !userRecipeLists[recipe.id]?.includes(category))}
+                        openOnFocus
+                        renderTags={renderTagsDark}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Add recipes to list(s)"
+                            variant="outlined"
+                          />
+                        )}
+                        filterOptions={(options, params) => {
+                          const filtered = filterAutocomplete(options, params);
+                          if (params.inputValue !== '' && !userRecipeCategories.some(category => category === params.inputValue)) {
+                            filtered.push({
+                              title: params.inputValue,
+                              label: `Create new list: "${params.inputValue}"`,
+                            });
+                          }
+                          return filtered;
+                        }}
+                        value={userRecipeLists[recipe.id] || []}
+                        onChange={(event, value) => handleCategoryChange(event, value, recipe.id)}
+                        style={{ width: "100%", marginTop: 10 }}
+                      />
+                    )
+                  )}
+                </div>
               </StyledRecipe>
           ))}
       </StyledRecipeSection>}
