@@ -90,10 +90,10 @@ const StyledBook = styled.div`
     font-weight: 600;
     margin-right: 20px;
     color: rgb(59, 61, 123);
-    &:hover {
-      text-decoration: underline;
-      cursor: pointer;
-  }
+  //   &:hover {
+  //     text-decoration: underline;
+  //     cursor: pointer;
+  // }
 `;
 const StyledPageNumber = styled.div`
 `;
@@ -191,7 +191,7 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
     const updateRecipeLists = async () => {  
       await setDoc(doc(db, 'users_recipe_lists', uid), userRecipeLists);
     };
-    if (uid) {updateRecipeLists()};
+    if (uid && Object.keys(userRecipeLists).length > 0) {updateRecipeLists()};
   }, [userRecipeLists]);
 
 
@@ -217,7 +217,7 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
         console.log(err);
       }
     };
-    if (uid) {fetchRecipeList()}
+    if (uid && uid !== "default") {fetchRecipeList()}
   }, [uid]);
 
 
@@ -292,7 +292,6 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
   }, []);
 
   useEffect(() => {
-    setRecipes(false);
     if (Object.keys(searchTerms).length > 0 && getRecipesClicked) {
       setGetRecipesClicked(false);
       async function getData() {
@@ -304,6 +303,12 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
           return [...acc, ...matchingIds];
         }, []);
 
+        if ("recipe list" in searchTerms && userRecipeListIds.length == 0) {
+          setGetRecipesClicked(true);
+          return
+        }
+
+        setRecipes(false);
         const getRecipesV2 = httpsCallable(functions, 'get_recipes_v2');
         const response = await getRecipesV2({
           searchTerms: searchTerms,
@@ -316,7 +321,7 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
       }
       getData();
     }
-  }, [getRecipesClicked]);
+  }, [getRecipesClicked, userRecipeLists]);
 
   useEffect(() => {
     const storedSearchTerms = window.localStorage.getItem('searchTermsHome');
@@ -507,9 +512,9 @@ export default function PageHome({uid, userCookbooks, getCookbookFromSearch}) {
                   </Button>
                 </div>
                 <StyledBookAndPage>
-                    <Link to="/cookbooks">
-                      <StyledBook onClick={(e) => getCookbookFromSearch(e.target.textContent)}>{recipe.book} by {recipe.author}</StyledBook>
-                    </Link>
+                    {/* <Link to="/cookbooks"> */}
+                    <StyledBook onClick={(e) => getCookbookFromSearch(e.target.textContent)}>{recipe.book}</StyledBook>
+                    {/* </Link> */}
                     <StyledPageNumber>Page: {recipe.page}</StyledPageNumber>
                 </StyledBookAndPage>
                 <StyledIngredientsAndCategories>

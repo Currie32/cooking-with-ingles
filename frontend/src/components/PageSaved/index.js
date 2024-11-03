@@ -150,6 +150,10 @@ const StyledDialog = styled.div`
   @media (max-width: 450px) {width: 300px}
   @media (max-width: 400px) {width: 250px}
 `
+const StyledRecipeSubTitle = styled.h2`
+  color: rgb(59, 61, 123);
+  margin: 15px 0px;
+`
 const StyledAddRecipeTextField = styled.div`
   display: flex;
   justify-content: center;
@@ -336,14 +340,14 @@ export default function PageSaved({uid}) {
     <div>
       <StyledButtonAddRecipe>
         <ButtonAddRecipe color="success" variant="outlined" onClick={handleClickOpen}>
-          Add recipe
+          Add recipe from internet
         </ButtonAddRecipe>
       </StyledButtonAddRecipe>
 
       <Dialog open={open} onClose={handleClose}>
         <StyledDialog>
           <StyledAddRecipeTextField>
-            <TextField fullWidth={true} id="outlined-basic" label="URL of recipe" variant="outlined" onChange={(event) => {setUrl(event.target.value)}} />
+            <TextField fullWidth={true} id="outlined-basic" label="URL of Recipe" variant="outlined" onChange={(event) => {setUrl(event.target.value)}} />
           </StyledAddRecipeTextField>
 
           <StyledAddRecipeButton>
@@ -435,6 +439,7 @@ export default function PageSaved({uid}) {
                   <StyledRecipeInfo>
 
                     <StyledIngredientsSection>
+                    <StyledRecipeSubTitle>Ingredients</StyledRecipeSubTitle>
                       <div>
                       {recipe.ingredients.map((ingredient, index_ingredient) => (
                         <StyledIngredient key={index_ingredient}>{ingredient}</StyledIngredient>
@@ -449,6 +454,7 @@ export default function PageSaved({uid}) {
                       }}/>
                     </Hidden>
                     <StyledInstructionsSection>
+                      <StyledRecipeSubTitle>Instructions</StyledRecipeSubTitle>
                       <div>
                         {recipe.instructions.map((instruction, index_instruction) => (
                           <StyledInstruction key={index_instruction}>{instruction}</StyledInstruction>
